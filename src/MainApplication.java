@@ -13,7 +13,7 @@ public class MainApplication extends GraphicsProgram{
 	//List of all the full screen panes
 	//Kaung
 	
-	// Hey Kaung
+	// one data member for each full screen you have
 	private WelcomePane welcomePane;
 	private DescriptionPane descriptionPane;
 	private GraphicsPane currentScreen;
@@ -37,7 +37,7 @@ public class MainApplication extends GraphicsProgram{
 		System.out.println("Lets' Begin!");
 		setupInteractions();
 		
-		//Initialize all Panes
+		//Initialize all of your full screens
 		welcomePane = new WelcomePane(this);
 		descriptionPane = new DescriptionPane(this);
 
@@ -49,6 +49,8 @@ public class MainApplication extends GraphicsProgram{
 		new MainApplication().start();
 
 	}
+	
+	//a switch to screen for every full screen 
 	
 	public void switchToDescriptionScreen() {
 		switchToScreen(descriptionPane);

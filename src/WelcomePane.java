@@ -4,6 +4,8 @@ import acm.graphics.GImage;
 import acm.graphics.GObject;
 
 public class WelcomePane extends GraphicsPane{
+	
+	//every full screen constructor 
 	public WelcomePane(MainApplication mainScreen) {
 		this.mainScreen = mainScreen;
 	}
@@ -14,6 +16,7 @@ public class WelcomePane extends GraphicsPane{
 		addDescriptionButton();
 	}
 
+	//keep the same and add more if needed
 	@Override
 	public void hideContent() {
 		for(GObject item : contents) {
@@ -27,6 +30,7 @@ public class WelcomePane extends GraphicsPane{
 		startImage.scale(0.5, 0.5);
 		startImage.setLocation((mainScreen.getWidth() - startImage.getWidth())/ 2, 70);
 		
+		//have these two for everything you want to show on screen
 		contents.add(startImage);
 		mainScreen.add(startImage);
 	}
