@@ -12,6 +12,8 @@ public class MainApplication extends GraphicsProgram{
 	
 	//List of all the full screen panes
 	//Kaung
+	
+	// Hey Kaung
 	private WelcomePane welcomePane;
 	private DescriptionPane descriptionPane;
 	private GraphicsPane currentScreen;
