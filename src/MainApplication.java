@@ -11,6 +11,7 @@ public class MainApplication extends GraphicsProgram{
 	public static final int WINDOW_HEIGHT = 600;
 	
 	//List of all the full screen panes
+	//Kaung
 	private WelcomePane welcomePane;
 	private DescriptionPane descriptionPane;
 	private GraphicsPane currentScreen;
