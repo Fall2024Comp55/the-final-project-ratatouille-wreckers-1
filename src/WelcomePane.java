@@ -14,6 +14,9 @@ public class WelcomePane extends GraphicsPane{
 	public void showContent() {
 		addPicture();
 		addDescriptionButton();
+		addStartButton();
+		addLeaderboardsButton();
+		addSettingsButton();
 	}
 
 	//keep the same and add more if needed
@@ -33,6 +36,18 @@ public class WelcomePane extends GraphicsPane{
 		//have these two for everything you want to show on screen
 		contents.add(startImage);
 		mainScreen.add(startImage);
+	}
+	
+	private void addStartButton() {
+		
+	}
+	
+	private void addLeaderboardsButton() {
+		
+	}
+	
+	private void addSettingsButton() {
+		
 	}
 	
 	private void addDescriptionButton() {
