@@ -48,7 +48,12 @@ public class WelcomePane extends GraphicsPane{
 	}
 	
 	private void addLeaderboardsButton() {
+		GImage leaderboardsButton = new GImage("LeaderboardsButton.png", 200, 500);
+		leaderboardsButton.scale(0.1, 0.1);
+		leaderboardsButton.setLocation((mainScreen.getWidth() - leaderboardsButton.getWidth())/ 2, 520);
 		
+		contents.add(leaderboardsButton);
+		mainScreen.add(leaderboardsButton);
 	}
 	
 	private void addSettingsButton() {
@@ -72,6 +77,9 @@ public class WelcomePane extends GraphicsPane{
 		}
 		if (mainScreen.getElementAtLocation(e.getX(), e.getY()) == contents.get(2)) {
 			System.out.println("Start Page");
+		}
+		if (mainScreen.getElementAtLocation(e.getX(), e.getY()) == contents.get(3)) {
+			System.out.println("Leaderboards Page");
 		}
 	}
 
