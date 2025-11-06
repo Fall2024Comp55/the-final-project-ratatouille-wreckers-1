@@ -39,7 +39,12 @@ public class WelcomePane extends GraphicsPane{
 	}
 	
 	private void addStartButton() {
+		GImage startButton = new GImage("StartButton.png", 300, 300);
+		startButton.scale(0.15, 0.15);
+		startButton.setLocation((mainScreen.getWidth() - startButton.getWidth())/ 2, 500);
 		
+		contents.add(startButton);
+		mainScreen.add(startButton);
 	}
 	
 	private void addLeaderboardsButton() {
@@ -64,6 +69,9 @@ public class WelcomePane extends GraphicsPane{
 	public void mouseClicked(MouseEvent e) {
 		if (mainScreen.getElementAtLocation(e.getX(), e.getY()) == contents.get(1)) {
 			mainScreen.switchToDescriptionScreen();
+		}
+		if (mainScreen.getElementAtLocation(e.getX(), e.getY()) == contents.get(2)) {
+			System.out.println("Start Page");
 		}
 	}
 
