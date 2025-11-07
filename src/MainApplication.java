@@ -156,3 +156,4 @@ public class MainApplication extends GraphicsProgram {
 		}
 	}
 }
+// Changed
