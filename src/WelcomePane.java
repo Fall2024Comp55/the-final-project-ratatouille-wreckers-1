@@ -50,7 +50,7 @@ public class WelcomePane extends GraphicsPane{
 	private void addLeaderboardsButton() {
 		GImage leaderboardsButton = new GImage("LeaderboardsButton.png", 200, 500);
 		leaderboardsButton.scale(0.1, 0.1);
-		leaderboardsButton.setLocation((mainScreen.getWidth() - leaderboardsButton.getWidth())/ 2, 520);
+		leaderboardsButton.setLocation((mainScreen.getWidth() - leaderboardsButton.getWidth())/ 2, 540);
 		
 		contents.add(leaderboardsButton);
 		mainScreen.add(leaderboardsButton);
