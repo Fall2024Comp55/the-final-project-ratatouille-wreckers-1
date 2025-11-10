@@ -14,6 +14,7 @@ public class MainApplication extends GraphicsProgram {
 	private WelcomePane welcomePane;
 	private DescriptionPane descriptionPane;
 	private GraphicsPane currentScreen;
+	private SettingsPane settingsPane;
 
 	// --- Add this line ---
 	private Scoreboard scoreboard;
