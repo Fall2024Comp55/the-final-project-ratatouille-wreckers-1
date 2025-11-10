@@ -13,7 +13,7 @@ public class WelcomePane extends GraphicsPane{
 	@Override
 	public void showContent() {
 		addPicture();
-		addDescriptionButton();
+//		addDescriptionButton();
 		addStartButton();
 		addLeaderboardsButton();
 		addSettingsButton();
@@ -41,7 +41,7 @@ public class WelcomePane extends GraphicsPane{
 	private void addStartButton() {
 		GImage startButton = new GImage("StartButton.png", 300, 300);
 		startButton.scale(0.15, 0.15);
-		startButton.setLocation((mainScreen.getWidth() - startButton.getWidth())/ 2, 500);
+		startButton.setLocation((mainScreen.getWidth() - startButton.getWidth())/ 2, 400);
 		
 		contents.add(startButton);
 		mainScreen.add(startButton);
@@ -50,36 +50,44 @@ public class WelcomePane extends GraphicsPane{
 	private void addLeaderboardsButton() {
 		GImage leaderboardsButton = new GImage("LeaderboardsButton.png", 200, 500);
 		leaderboardsButton.scale(0.1, 0.1);
-		leaderboardsButton.setLocation((mainScreen.getWidth() - leaderboardsButton.getWidth())/ 2, 540);
+		leaderboardsButton.setLocation((mainScreen.getWidth() - leaderboardsButton.getWidth())/ 2, 440);
 		
 		contents.add(leaderboardsButton);
 		mainScreen.add(leaderboardsButton);
 	}
 	
 	private void addSettingsButton() {
+		GImage settingsButton = new GImage("SettingsButton.png", 200, 530);
+		settingsButton.scale(0.1, 0.1);
+		settingsButton.setLocation((mainScreen.getWidth() - settingsButton.getWidth())/ 2, 480);
 		
+		contents.add(settingsButton);
+		mainScreen.add(settingsButton);
 	}
 	
-	private void addDescriptionButton() {
-		GImage moreButton = new GImage("more.jpeg", 200, 400);
-		moreButton.scale(0.3, 0.3);
-		moreButton.setLocation((mainScreen.getWidth() - moreButton.getWidth())/ 2, 400);
-		
-		contents.add(moreButton);
-		mainScreen.add(moreButton);
-
-	}
+//	private void addDescriptionButton() {
+//		GImage moreButton = new GImage("more.jpeg", 200, 400);
+//		moreButton.scale(0.3, 0.3);
+//		moreButton.setLocation((mainScreen.getWidth() - moreButton.getWidth())/ 2, 400);
+//		
+//		contents.add(moreButton);
+//		mainScreen.add(moreButton);
+//
+//	}
 	
 	@Override
 	public void mouseClicked(MouseEvent e) {
+//		if (mainScreen.getElementAtLocation(e.getX(), e.getY()) == contents.get(1)) {
+//			mainScreen.switchToDescriptionScreen();
+//		}
 		if (mainScreen.getElementAtLocation(e.getX(), e.getY()) == contents.get(1)) {
-			mainScreen.switchToDescriptionScreen();
-		}
-		if (mainScreen.getElementAtLocation(e.getX(), e.getY()) == contents.get(2)) {
 			System.out.println("Start Page");
 		}
-		if (mainScreen.getElementAtLocation(e.getX(), e.getY()) == contents.get(3)) {
+		if (mainScreen.getElementAtLocation(e.getX(), e.getY()) == contents.get(2)) {
 			System.out.println("Leaderboards Page");
+		}
+		if (mainScreen.getElementAtLocation(e.getX(), e.getY()) == contents.get(3)) {
+			System.out.println("Settings Page");
 		}
 	}
 
