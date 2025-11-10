@@ -17,6 +17,7 @@ public class WelcomePane extends GraphicsPane{
 		addStartButton();
 		addLeaderboardsButton();
 		addSettingsButton();
+		addExitButton();
 	}
 
 	//keep the same and add more if needed
@@ -65,6 +66,15 @@ public class WelcomePane extends GraphicsPane{
 		mainScreen.add(settingsButton);
 	}
 	
+	private void addExitButton() {
+		GImage exitButton = new GImage("ExitButton.png", 200, 550);
+		exitButton.scale(0.1, 0.1);
+		exitButton.setLocation((mainScreen.getWidth() - exitButton.getWidth())/ 2, 522);
+		
+		contents.add(exitButton);
+		mainScreen.add(exitButton);
+	}
+	
 //	private void addDescriptionButton() {
 //		GImage moreButton = new GImage("more.jpeg", 200, 400);
 //		moreButton.scale(0.3, 0.3);
@@ -88,6 +98,9 @@ public class WelcomePane extends GraphicsPane{
 		}
 		if (mainScreen.getElementAtLocation(e.getX(), e.getY()) == contents.get(3)) {
 			System.out.println("Settings Page");
+		}
+		if (mainScreen.getElementAtLocation(e.getX(), e.getY()) == contents.get(4)) {
+			System.exit(0);
 		}
 	}
 
