@@ -23,6 +23,21 @@ public class SettingsPane extends GraphicsPane {
     
     private Slider activeSlider = null;
     
+    @Override
+    public void showContent() {
+        addUI();
+    }
+
+    @Override
+    public void hideContent() {
+    	for(GObject item : contents) {
+			mainScreen.remove(item);
+		}
+		contents.clear();
+    }
     
+    private void addUI() {
+    	
+    }
 	
 }
