@@ -3,3 +3,4 @@ public enum RatType {
     BONUS,
     TRAP
 }
+return null;
