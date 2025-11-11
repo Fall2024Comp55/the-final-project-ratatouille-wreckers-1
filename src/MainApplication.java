@@ -40,6 +40,7 @@ public class MainApplication extends GraphicsProgram {
 		// Initialize all of your full screens
 		welcomePane = new WelcomePane(this);
 		descriptionPane = new DescriptionPane(this);
+		settingsPane = new SettingsPane(this);
 
 		// --- Add this part ---
 		scoreboard = new Scoreboard(this);
@@ -63,7 +64,7 @@ public class MainApplication extends GraphicsProgram {
 		switchToScreen(welcomePane);
 	}
 	
-	public void switchToSettingsPane() {
+	public void switchToSettingsScreen() {
 		switchToScreen(settingsPane);
 	}
 

@@ -97,7 +97,7 @@ public class WelcomePane extends GraphicsPane{
 			System.out.println("Leaderboards Page");
 		}
 		if (mainScreen.getElementAtLocation(e.getX(), e.getY()) == contents.get(3)) {
-			System.out.println("Settings Page");
+			mainScreen.switchToSettingsScreen();
 		}
 		if (mainScreen.getElementAtLocation(e.getX(), e.getY()) == contents.get(4)) {
 			System.exit(0);
