@@ -108,19 +108,11 @@ public class SettingsPane extends GraphicsPane {
         double pos = s.track.getX() + (s.value / 100.0) * (s.track.getWidth() - s.handle.getWidth());
         s.handle.setLocation(pos, s.track.getY() - 9);
     }
-
+    
     @Override
-    public void mousePressed(MouseEvent e) {
-        GObject obj = mainScreen.getElementAt(e.getX(), e.getY());
-        if (obj == null) return;
-
-        // Determine if press is on a slider handle
-        if (obj == mainVol.handle) activeSlider = mainVol;
-        else if (obj == sfxVol.handle) activeSlider = sfxVol;
-        else if (obj == musicVol.handle) activeSlider = musicVol;
-        else if (obj == brightness.handle) activeSlider = brightness;
-        else activeSlider = null;
-
+    public void mouseClicked(MouseEvent e) {
+    	 GObject obj = mainScreen.getElementAt(e.getX(), e.getY());
+         if (obj == null) return;
         // Buttons
         if (obj == saveButton || obj == saveLabel) {
             System.out.println("Saved Values:");
@@ -134,6 +126,19 @@ public class SettingsPane extends GraphicsPane {
         if (obj == cancelButton || obj == cancelLabel) {
             mainScreen.switchToWelcomeScreen();
         }
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+        GObject obj = mainScreen.getElementAt(e.getX(), e.getY());
+        if (obj == null) return;
+
+        // Determine if press is on a slider handle
+        if (obj == mainVol.handle) activeSlider = mainVol;
+        else if (obj == sfxVol.handle) activeSlider = sfxVol;
+        else if (obj == musicVol.handle) activeSlider = musicVol;
+        else if (obj == brightness.handle) activeSlider = brightness;
+        else activeSlider = null;
     }
 
     @Override

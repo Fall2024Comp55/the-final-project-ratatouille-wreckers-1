@@ -92,14 +92,14 @@ public class WelcomePane extends GraphicsPane{
 //		}
 		if (mainScreen.getElementAtLocation(e.getX(), e.getY()) == contents.get(1)) {
 			System.out.println("Start Page");
-		}
-		if (mainScreen.getElementAtLocation(e.getX(), e.getY()) == contents.get(2)) {
+		} 
+		else if (mainScreen.getElementAtLocation(e.getX(), e.getY()) == contents.get(2)) {
 			System.out.println("Leaderboards Page");
 		}
-		if (mainScreen.getElementAtLocation(e.getX(), e.getY()) == contents.get(3)) {
+		else if (mainScreen.getElementAtLocation(e.getX(), e.getY()) == contents.get(3)) {
 			mainScreen.switchToSettingsScreen();
 		}
-		if (mainScreen.getElementAtLocation(e.getX(), e.getY()) == contents.get(4)) {
+		else if (mainScreen.getElementAtLocation(e.getX(), e.getY()) == contents.get(4)) {
 			System.exit(0);
 		}
 	}
