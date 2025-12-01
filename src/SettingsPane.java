@@ -11,8 +11,6 @@ public class SettingsPane extends GraphicsPane {
         this.mainScreen = mainScreen;
     }
 
-    // If true, we go back to the game after Save/Cancel.
-    // If false, we go back to the main menu.
     private boolean returnToGame = false;
 
     public void setReturnToGame(boolean value) {
@@ -32,7 +30,6 @@ public class SettingsPane extends GraphicsPane {
     private GLabel title;
     private GRect saveButton, cancelButton;
     private GLabel saveLabel, cancelLabel;
-
     private Slider activeSlider = null;
     private GRect panelBg;
 
@@ -152,20 +149,17 @@ public class SettingsPane extends GraphicsPane {
         if (obj == null) return;
 
         if (obj == saveButton || obj == saveLabel) {
-            // Save settings
             mainScreen.setMainVolume(mainVol.value);
             mainScreen.setSfxVolume(sfxVol.value);
             mainScreen.setMusicVolume(musicVol.value);
             mainScreen.setBrightness(brightness.value);
 
-            // Go back where we came from
             if (returnToGame) {
                 mainScreen.switchToGameScreen();
             } else {
                 mainScreen.switchToWelcomeScreen();
             }
         } else if (obj == cancelButton || obj == cancelLabel || obj == panelBg) {
-            // Discard & go back
             if (returnToGame) {
                 mainScreen.switchToGameScreen();
             } else {

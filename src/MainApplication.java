@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainApplication extends GraphicsProgram {
-    // Window
     public static final int WINDOW_WIDTH = 800;
     public static final int WINDOW_HEIGHT = 600;
 
@@ -28,7 +27,6 @@ public class MainApplication extends GraphicsProgram {
         }
     }
 
-    // Leaderboard scores (top 10, highest first)
     private final List<ScoreEntry> leaderboard = new ArrayList<>();
 
     // Screens
@@ -39,7 +37,7 @@ public class MainApplication extends GraphicsProgram {
     private GamePane gamePane;
     private LeaderboardPane leaderboardPane;
 
-    // Scoreboard overlay
+    // Score overlay
     private Scoreboard scoreboard;
 
     public MainApplication() {
@@ -59,21 +57,18 @@ public class MainApplication extends GraphicsProgram {
 
     @Override
     public void run() {
-        System.out.println("Lets' Begin!");
+        System.out.println("Let's Begin!");
         setupInteractions();
 
-        // Init screens
         welcomePane = new WelcomePane(this);
         descriptionPane = new DescriptionPane(this);
         settingsPane = new SettingsPane(this);
         gamePane = new GamePane(this);
         leaderboardPane = new LeaderboardPane(this);
 
-        // Scoreboard
         scoreboard = new Scoreboard(this);
         scoreboard.update(0);
 
-        // Default screen
         switchToScreen(welcomePane);
     }
 
@@ -83,24 +78,12 @@ public class MainApplication extends GraphicsProgram {
 
     // ---------- Screen switching ----------
 
-    public void switchToDescriptionScreen() {
-        switchToScreen(descriptionPane);
-    }
-
     public void switchToWelcomeScreen() {
         switchToScreen(welcomePane);
     }
 
-    // Settings from main menu (or anywhere non-game)
-    public void switchToSettingsScreen() {
-        settingsPane.setReturnToGame(false);
-        switchToScreen(settingsPane);
-    }
-
-    // Settings specifically from in-game pause menu
-    public void switchToSettingsFromGame() {
-        settingsPane.setReturnToGame(true);
-        switchToScreen(settingsPane);
+    public void switchToDescriptionScreen() {
+        switchToScreen(descriptionPane);
     }
 
     public void switchToGameScreen() {
@@ -111,6 +94,18 @@ public class MainApplication extends GraphicsProgram {
         switchToScreen(leaderboardPane);
     }
 
+    // Settings from non-game screens
+    public void switchToSettingsScreen() {
+        settingsPane.setReturnToGame(false);
+        switchToScreen(settingsPane);
+    }
+
+    // Settings specifically from the in-game pause menu
+    public void switchToSettingsFromGame() {
+        settingsPane.setReturnToGame(true);
+        switchToScreen(settingsPane);
+    }
+
     protected void switchToScreen(GraphicsPane newScreen) {
         if (currentScreen != null) {
             currentScreen.hideContent();
@@ -118,7 +113,7 @@ public class MainApplication extends GraphicsProgram {
         newScreen.showContent();
         currentScreen = newScreen;
 
-        // scoreboard only visible in game
+        // Score only in game
         if (newScreen == gamePane) {
             showScoreboard();
         } else {
@@ -152,7 +147,7 @@ public class MainApplication extends GraphicsProgram {
         return getElementAt(x, y);
     }
 
-    // ---------- Settings get/set ----------
+    // ---------- Settings values ----------
 
     public int getMainVolume() {
         return mainVolume;
@@ -192,9 +187,8 @@ public class MainApplication extends GraphicsProgram {
         return v;
     }
 
-    // ---------- Leaderboard API ----------
+    // ---------- Leaderboard ----------
 
-    /** Record a new score with player's name, keep top 10 highest. */
     public void recordScore(int score) {
         if (score < 0) score = 0;
 
@@ -204,22 +198,17 @@ public class MainApplication extends GraphicsProgram {
                 "New High Score",
                 JOptionPane.PLAIN_MESSAGE
         );
-        if (name == null) {
-            // cancelled
-            name = "Player";
-        }
+        if (name == null) name = "Player";
         name = name.trim();
         if (name.isEmpty()) name = "Player";
 
         leaderboard.add(new ScoreEntry(name, score));
-        leaderboard.sort((a, b) -> Integer.compare(b.score, a.score)); // descending
+        leaderboard.sort((a, b) -> Integer.compare(b.score, a.score));
         if (leaderboard.size() > 10) {
             leaderboard.subList(10, leaderboard.size()).clear();
         }
-        System.out.println("Recorded score: " + score + " by " + name);
     }
 
-    /** Get copy of leaderboard, highest first. */
     public List<ScoreEntry> getLeaderboardEntries() {
         return new ArrayList<>(leaderboard);
     }

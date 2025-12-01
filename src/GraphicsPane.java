@@ -1,8 +1,8 @@
+import acm.graphics.GObject;
+
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-
-import acm.graphics.GObject;
 
 public class GraphicsPane {
     protected MainApplication mainScreen;
