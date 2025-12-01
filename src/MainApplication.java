@@ -1,7 +1,6 @@
 import acm.graphics.GObject;
 import acm.program.*;
 
-
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 
@@ -15,6 +14,7 @@ public class MainApplication extends GraphicsProgram {
 	private DescriptionPane descriptionPane;
 	private GraphicsPane currentScreen;
 	private SettingsPane settingsPane;
+    private GamePane gamePane;       // <<< NEW
 
 	// --- Add this line ---
 	private Scoreboard scoreboard;
@@ -41,11 +41,11 @@ public class MainApplication extends GraphicsProgram {
 		welcomePane = new WelcomePane(this);
 		descriptionPane = new DescriptionPane(this);
 		settingsPane = new SettingsPane(this);
+        gamePane = new GamePane(this);         // <<< NEW
 
 		// --- Add this part ---
 		scoreboard = new Scoreboard(this);
 		scoreboard.update(0);   // Start at 0
-		// scoreboard.show();    // Uncomment if you want it visible from the start
 
 		// The Default Pane
 		switchToScreen(welcomePane);
@@ -63,10 +63,15 @@ public class MainApplication extends GraphicsProgram {
 	public void switchToWelcomeScreen() {
 		switchToScreen(welcomePane);
 	}
-	
+
 	public void switchToSettingsScreen() {
 		switchToScreen(settingsPane);
 	}
+
+    // <<< NEW >>>
+    public void switchToGameScreen() {
+        switchToScreen(gamePane);
+    }
 
 	protected void switchToScreen(GraphicsPane newScreen) {
 		if (currentScreen != null) {
@@ -76,12 +81,13 @@ public class MainApplication extends GraphicsProgram {
 		currentScreen = newScreen;
 
 		// show scoreboard only on certain screens ---
-		if (newScreen == descriptionPane) {
+		if (newScreen == gamePane) {          // <<< CHANGED (was descriptionPane)
 			showScoreboard();
 		} else {
 			hideScoreboard();
 		}
 	}
+
 	public void showScoreboard() {
 		if (scoreboard != null) scoreboard.show();
 	}
@@ -162,4 +168,3 @@ public class MainApplication extends GraphicsProgram {
 		}
 	}
 }
-// Changed

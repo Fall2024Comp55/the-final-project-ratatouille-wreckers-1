@@ -90,4 +90,26 @@ public abstract class Ratdg {
         }
     }
 
+    // ---------- helpers for game logic ----------
+
+    public boolean containsPoint(double x, double y) {
+        return node.contains(x, y);
+    }
+
+    public boolean isActive() {
+        // active while it's visible or still assigned to a hole
+        return visible || hole != null;
+    }
+
+    public boolean isVisible() {
+        return visible;
+    }
+
+    public RatType getType() {
+        return type;
+    }
+
+    public int getPoints() {
+        return points;
+    }
 }
