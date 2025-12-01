@@ -1,4 +1,3 @@
-
 public class Hole {
     private final double x;
     private final double y;

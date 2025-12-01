@@ -2,6 +2,7 @@ import acm.graphics.*;
 
 import javax.swing.Timer;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -14,14 +15,18 @@ public class GamePane extends GraphicsPane {
     // Grid settings
     private static final int ROWS = 3;
     private static final int COLS = 4;
-    private static final double GRID_WIDTH = 450;
-    private static final double GRID_HEIGHT = 250;
+    private static final double GRID_WIDTH = 520;
+    private static final double GRID_HEIGHT = 260;
     private static final double HOLE_RADIUS = 30;
 
     // Timing
-    private static final int TICK_MS = 40;          // ~25 FPS
-    private static final double SPAWN_CHANCE = 0.04; // chance per tick
-    private static final int MAX_ACTIVE_RATS = 4;
+    private static final int TICK_MS = 40;                 // ~25 FPS
+    private static final double SPAWN_CHANCE = 0.05;
+    private static final int MAX_ACTIVE_RATS = 5;
+
+    // Game duration: 3 minutes
+    private static final int GAME_DURATION_MS = 3 * 60 * 1000;
+    private int timeRemainingMs = GAME_DURATION_MS;
 
     private final List<Hole> holes = new ArrayList<>();
     private final List<Ratdg> activeRats = new ArrayList<>();
@@ -29,6 +34,9 @@ public class GamePane extends GraphicsPane {
 
     private Timer timer;
     private GObject hammer;
+    private GRect topBar;
+    private GLabel backLabel;
+    private GLabel timerLabel;
 
     public GamePane(MainApplication mainScreen) {
         this.mainScreen = mainScreen;
@@ -36,10 +44,10 @@ public class GamePane extends GraphicsPane {
         setupTimer();
     }
 
-    // ----------------- lifecycle -----------------
+    // ---------- lifecycle ----------
+
     @Override
     public void showContent() {
-        // Add all static UI elements (board + hammer)
         for (GObject obj : contents) {
             mainScreen.add(obj);
         }
@@ -47,11 +55,12 @@ public class GamePane extends GraphicsPane {
             hammer.sendToFront();
         }
         if (timer != null) {
+            // reset game state
+            timeRemainingMs = GAME_DURATION_MS;
+            updateTimerLabel();
+            mainScreen.setScore(0);
             timer.start();
         }
-
-        // reset score each time we enter game (optional)
-        mainScreen.setScore(0);
     }
 
     @Override
@@ -60,7 +69,6 @@ public class GamePane extends GraphicsPane {
             timer.stop();
         }
 
-        // Despawn all rats
         for (Ratdg r : activeRats) {
             r.despawn();
         }
@@ -71,32 +79,78 @@ public class GamePane extends GraphicsPane {
         }
         contents.clear();
 
-        // Rebuild for next time
         buildBoard();
     }
 
-    // ----------------- board setup -----------------
-    private void buildBoard() {
-        // Simple background panel for game area
-        GRect bg = new GRect(0, 0, mainScreen.getWidth(), mainScreen.getHeight());
-        bg.setFilled(true);
-        bg.setFillColor(new Color(180, 220, 255)); // light blue backdrop
-        bg.setColor(Color.BLACK);
-        contents.add(bg);
+    // ---------- setup visuals ----------
 
-        // Title
-        GLabel title = new GLabel("WHACK-A-RAT", 0, 0);
-        title.setFont("Monospaced-BOLD-32");
-        title.setColor(Color.DARK_GRAY);
+    private void buildBoard() {
+        double w = mainScreen.getWidth();
+        double h = mainScreen.getHeight();
+
+        // sky
+        GRect sky = new GRect(0, 0, w, h * 0.6);
+        sky.setFilled(true);
+        sky.setFillColor(new Color(155, 204, 255));
+        sky.setColor(Color.BLACK);
+        contents.add(sky);
+
+        // ground
+        GRect ground = new GRect(0, h * 0.6, w, h * 0.4);
+        ground.setFilled(true);
+        ground.setFillColor(new Color(90, 160, 80));
+        ground.setColor(Color.BLACK);
+        contents.add(ground);
+
+        // top bar
+        topBar = new GRect(0, 0, w, 60);
+        topBar.setFilled(true);
+        topBar.setFillColor(new Color(40, 40, 40));
+        topBar.setColor(Color.BLACK);
+        contents.add(topBar);
+
+        // title
+        GLabel title = new GLabel("WRECK IT RATS");
+        title.setFont(new Font("Monospaced", Font.BOLD, 22));
+        title.setColor(Color.WHITE);
         title.setLocation(
-                (mainScreen.getWidth() - title.getWidth()) / 2.0,
-                70
+                (w - title.getWidth()) / 2.0,
+                38
         );
         contents.add(title);
 
-        // Hole grid
-        double startX = (mainScreen.getWidth() - GRID_WIDTH) / 2.0;
-        double startY = 140;
+        // back button (top-left)
+        backLabel = new GLabel("< BACK");
+        backLabel.setFont(new Font("Monospaced", Font.BOLD, 16));
+        backLabel.setColor(new Color(220, 220, 220));
+        backLabel.setLocation(15, 36);
+        contents.add(backLabel);
+
+        // timer label (top-right)
+        timerLabel = new GLabel("03:00");
+        timerLabel.setFont(new Font("Monospaced", Font.BOLD, 18));
+        timerLabel.setColor(Color.WHITE);
+        timerLabel.setLocation(
+                w - timerLabel.getWidth() - 20,
+                36
+        );
+        contents.add(timerLabel);
+
+        // wooden board for holes
+        double boardW = GRID_WIDTH + 80;
+        double boardH = GRID_HEIGHT + 80;
+        double boardX = (w - boardW) / 2.0;
+        double boardY = 120;
+
+        GRect board = new GRect(boardX, boardY, boardW, boardH);
+        board.setFilled(true);
+        board.setFillColor(new Color(139, 115, 85));
+        board.setColor(new Color(90, 65, 40));
+        contents.add(board);
+
+        // hole grid
+        double startX = boardX + (boardW - GRID_WIDTH) / 2.0;
+        double startY = boardY + (boardH - GRID_HEIGHT) / 2.0;
         double cellW = GRID_WIDTH / (COLS - 1);
         double cellH = GRID_HEIGHT / (ROWS - 1);
 
@@ -107,27 +161,33 @@ public class GamePane extends GraphicsPane {
                 double cx = startX + col * cellW;
                 double cy = startY + row * cellH;
 
-                // Visual hole
+                GOval shadow = new GOval(
+                        cx - HOLE_RADIUS, cy - HOLE_RADIUS + 5,
+                        HOLE_RADIUS * 2, HOLE_RADIUS * 2
+                );
+                shadow.setFilled(true);
+                shadow.setFillColor(new Color(40, 30, 20));
+                shadow.setColor(new Color(30, 20, 10));
+                contents.add(shadow);
+
                 GOval holeShape = new GOval(
-                        cx - HOLE_RADIUS,
-                        cy - HOLE_RADIUS,
-                        HOLE_RADIUS * 2,
-                        HOLE_RADIUS * 2
+                        cx - HOLE_RADIUS, cy - HOLE_RADIUS,
+                        HOLE_RADIUS * 2, HOLE_RADIUS * 2
                 );
                 holeShape.setFilled(true);
-                holeShape.setFillColor(new Color(60, 40, 20)); // dark brown
+                holeShape.setFillColor(new Color(70, 50, 30));
                 holeShape.setColor(Color.BLACK);
                 contents.add(holeShape);
 
-                Hole h = new Hole(cx, cy);
-                holes.add(h);
+                Hole hHole = new Hole(cx, cy);
+                holes.add(hHole);
             }
         }
 
-        // Hammer cursor (simple circle for now)
+        // hammer (placeholder)
         GOval hammerShape = new GOval(0, 0, 40, 40);
         hammerShape.setFilled(true);
-        hammerShape.setFillColor(new Color(200, 50, 50));
+        hammerShape.setFillColor(new Color(220, 60, 60));
         hammerShape.setColor(Color.BLACK);
         hammer = hammerShape;
         contents.add(hammer);
@@ -142,22 +202,46 @@ public class GamePane extends GraphicsPane {
         });
     }
 
-    // ----------------- game loop -----------------
+    // ---------- game loop ----------
+
     private void tick(int deltaMs) {
+        // update timer
+        if (timeRemainingMs > 0) {
+            timeRemainingMs -= deltaMs;
+            if (timeRemainingMs < 0) timeRemainingMs = 0;
+            updateTimerLabel();
+        }
+
         // update rats
         for (Ratdg r : activeRats) {
             r.onTick(deltaMs);
         }
 
-        // remove fully inactive rats
         activeRats.removeIf(r -> !r.isActive());
 
-        // spawn new ones
-        maybeSpawn();
+        // only spawn new rats while there is time left
+        if (timeRemainingMs > 0) {
+            maybeSpawn();
+        }
+    }
+
+    private void updateTimerLabel() {
+        int totalSeconds = timeRemainingMs / 1000;
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+
+        String text = String.format("%02d:%02d", minutes, seconds);
+        timerLabel.setLabel(text);
+
+        // keep right-aligned
+        double w = mainScreen.getWidth();
+        timerLabel.setLocation(
+                w - timerLabel.getWidth() - 20,
+                36
+        );
     }
 
     private void maybeSpawn() {
-        // limit how many
         int currentlyVisible = 0;
         for (Hole h : holes) {
             if (h.isOccupied()) currentlyVisible++;
@@ -166,7 +250,6 @@ public class GamePane extends GraphicsPane {
 
         if (rng.nextDouble() > SPAWN_CHANCE) return;
 
-        // pick a random empty hole
         List<Hole> empty = new ArrayList<>();
         for (Hole h : holes) {
             if (!h.isOccupied()) empty.add(h);
@@ -177,7 +260,7 @@ public class GamePane extends GraphicsPane {
 
         Ratdg rat;
         double p = rng.nextDouble();
-        if (p < 0.7) {
+        if (p < 0.65) {
             rat = new NormalRat(mainScreen);
         } else if (p < 0.9) {
             rat = new BonusRat(mainScreen);
@@ -189,7 +272,8 @@ public class GamePane extends GraphicsPane {
         hole.spawn(rat);
     }
 
-    // ----------------- input handling -----------------
+    // ---------- input ----------
+
     @Override
     public void mouseMoved(MouseEvent e) {
         if (hammer != null) {
@@ -207,6 +291,11 @@ public class GamePane extends GraphicsPane {
 
     @Override
     public void mouseClicked(MouseEvent e) {
+        GObject obj = mainScreen.getElementAt(e.getX(), e.getY());
+        if (obj == backLabel || obj == topBar) {
+            mainScreen.switchToWelcomeScreen();
+            return;
+        }
         handleWhack(e.getX(), e.getY());
     }
 
@@ -232,8 +321,7 @@ public class GamePane extends GraphicsPane {
             }
         }
 
-        // Miss penalty
-        if (!hit) {
+        if (!hit && timeRemainingMs > 0) {
             mainScreen.addToScore(-1);
         }
     }

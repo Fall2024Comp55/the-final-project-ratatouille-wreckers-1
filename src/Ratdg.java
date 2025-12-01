@@ -7,12 +7,11 @@ public abstract class Ratdg {
     protected int points;
     protected int lifetimeMs;
     protected boolean visible;
-    protected Hole hole;                // null when not in a hole
+    protected Hole hole;
 
-    protected final GCompound node = new GCompound(); 
+    protected final GCompound node = new GCompound();
     protected final MainApplication app;
 
-    // simple lifetime counter
     private int ageMs = 0;
 
     protected Ratdg(MainApplication app, RatType type, int points, int lifetimeMs) {
@@ -24,7 +23,6 @@ public abstract class Ratdg {
         this.hole = null;
     }
 
-    // onSpawn(h: Hole): void
     public void onSpawn(Hole h) {
         this.hole = h;
         node.setLocation(h.getX(), h.getY());
@@ -32,7 +30,6 @@ public abstract class Ratdg {
         ageMs = 0;
     }
 
-    // onTick(deltaMs: int): void
     public void onTick(int deltaMs) {
         ageMs += deltaMs;
         if (ageMs >= lifetimeMs) {
@@ -40,7 +37,6 @@ public abstract class Ratdg {
         }
     }
 
-    // despawn(): void
     public void despawn() {
         hide();
         if (hole != null) {
@@ -50,7 +46,6 @@ public abstract class Ratdg {
         ageMs = 0;
     }
 
-    // show(): void
     public void show() {
         if (!visible) {
             app.add(node);
@@ -58,7 +53,6 @@ public abstract class Ratdg {
         }
     }
 
-    // hide(): void
     public void hide() {
         if (visible) {
             app.remove(node);
@@ -66,17 +60,13 @@ public abstract class Ratdg {
         }
     }
 
-    // onMouseMove(x:int, y:int): void
     public void onMouseMove(int x, int y) { }
 
-    // onMouseClick(x:int, y:int): void  (subclasses can override)
     public void onMouseClick(int x, int y) { }
 
-    // ---- Image helper (loads from file path) ----
     protected void setSpriteFromFile(String path, double offsetX, double offsetY, double width, double height) {
-        GImage img = null;
         try {
-            img = new GImage(path);
+            GImage img = new GImage(path);
             if (width > 0 && height > 0) {
                 img.setSize(width, height);
             }
@@ -90,14 +80,12 @@ public abstract class Ratdg {
         }
     }
 
-    // ---------- helpers for game logic ----------
-
+    // helpers
     public boolean containsPoint(double x, double y) {
         return node.contains(x, y);
     }
 
     public boolean isActive() {
-        // active while it's visible or still assigned to a hole
         return visible || hole != null;
     }
 

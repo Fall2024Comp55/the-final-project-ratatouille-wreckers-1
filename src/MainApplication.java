@@ -1,170 +1,220 @@
 import acm.graphics.GObject;
-import acm.program.*;
+import acm.program.GraphicsProgram;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 
 public class MainApplication extends GraphicsProgram {
-	// Settings
-	public static final int WINDOW_WIDTH = 800;
-	public static final int WINDOW_HEIGHT = 600;
+    // Settings
+    public static final int WINDOW_WIDTH = 800;
+    public static final int WINDOW_HEIGHT = 600;
 
-	// List of all the full screen panes
-	private WelcomePane welcomePane;
-	private DescriptionPane descriptionPane;
-	private GraphicsPane currentScreen;
-	private SettingsPane settingsPane;
-    private GamePane gamePane;       // <<< NEW
+    // Stored settings values (0–100)
+    private int mainVolume = 50;
+    private int sfxVolume = 50;
+    private int musicVolume = 50;
+    private int brightness = 50;
 
-	// --- Add this line ---
-	private Scoreboard scoreboard;
+    // List of all the full screen panes
+    private WelcomePane welcomePane;
+    private DescriptionPane descriptionPane;
+    private GraphicsPane currentScreen;
+    private SettingsPane settingsPane;
+    private GamePane gamePane;       // game screen
 
-	public MainApplication() {
-		super();
-	}
+    // Scoreboard
+    private Scoreboard scoreboard;
 
-	protected void setupInteractions() {
-		requestFocus();
-		addKeyListeners();
-		addMouseListeners();
-	}
+    public MainApplication() {
+        super();
+    }
 
-	public void init() {
-		setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-	}
+    protected void setupInteractions() {
+        requestFocus();
+        addKeyListeners();
+        addMouseListeners();
+    }
 
-	public void run() {
-		System.out.println("Lets' Begin!");
-		setupInteractions();
+    public void init() {
+        setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
+    }
 
-		// Initialize all of your full screens
-		welcomePane = new WelcomePane(this);
-		descriptionPane = new DescriptionPane(this);
-		settingsPane = new SettingsPane(this);
-        gamePane = new GamePane(this);         // <<< NEW
+    public void run() {
+        System.out.println("Lets' Begin!");
+        setupInteractions();
 
-		// --- Add this part ---
-		scoreboard = new Scoreboard(this);
-		scoreboard.update(0);   // Start at 0
+        // Initialize all of your full screens
+        welcomePane = new WelcomePane(this);
+        descriptionPane = new DescriptionPane(this);
+        settingsPane = new SettingsPane(this);
+        gamePane = new GamePane(this);
 
-		// The Default Pane
-		switchToScreen(welcomePane);
-	}
+        // Scoreboard
+        scoreboard = new Scoreboard(this);
+        scoreboard.update(0);   // Start at 0
 
-	public static void main(String[] args) {
-		new MainApplication().start();
-	}
+        // The Default Pane
+        switchToScreen(welcomePane);
+    }
 
-	// a switch to screen for every full screen 
-	public void switchToDescriptionScreen() {
-		switchToScreen(descriptionPane);
-	}
+    public static void main(String[] args) {
+        new MainApplication().start();
+    }
 
-	public void switchToWelcomeScreen() {
-		switchToScreen(welcomePane);
-	}
+    // ----- screen switches -----
 
-	public void switchToSettingsScreen() {
-		switchToScreen(settingsPane);
-	}
+    public void switchToDescriptionScreen() {
+        switchToScreen(descriptionPane);
+    }
 
-    // <<< NEW >>>
+    public void switchToWelcomeScreen() {
+        switchToScreen(welcomePane);
+    }
+
+    public void switchToSettingsScreen() {
+        switchToScreen(settingsPane);
+    }
+
     public void switchToGameScreen() {
         switchToScreen(gamePane);
     }
 
-	protected void switchToScreen(GraphicsPane newScreen) {
-		if (currentScreen != null) {
-			currentScreen.hideContent();
-		}
-		newScreen.showContent();
-		currentScreen = newScreen;
+    protected void switchToScreen(GraphicsPane newScreen) {
+        if (currentScreen != null) {
+            currentScreen.hideContent();
+        }
+        newScreen.showContent();
+        currentScreen = newScreen;
 
-		// show scoreboard only on certain screens ---
-		if (newScreen == gamePane) {          // <<< CHANGED (was descriptionPane)
-			showScoreboard();
-		} else {
-			hideScoreboard();
-		}
-	}
+        // show scoreboard only on game screen
+        if (newScreen == gamePane) {
+            showScoreboard();
+        } else {
+            hideScoreboard();
+        }
+    }
 
-	public void showScoreboard() {
-		if (scoreboard != null) scoreboard.show();
-	}
+    // ----- scoreboard -----
 
-	public void hideScoreboard() {
-		if (scoreboard != null) scoreboard.hide();
-	}
+    public void showScoreboard() {
+        if (scoreboard != null) scoreboard.show();
+    }
 
-	public void setScore(int score) {
-		if (scoreboard != null) scoreboard.update(score);
-	}
+    public void hideScoreboard() {
+        if (scoreboard != null) scoreboard.hide();
+    }
 
-	public int getScore() {
-		return (scoreboard == null) ? 0 : scoreboard.getDisplayedScore();
-	}
+    public void setScore(int score) {
+        if (scoreboard != null) scoreboard.update(score);
+    }
 
-	public void addToScore(int delta) {
-		setScore(getScore() + delta);
-	}
+    public int getScore() {
+        return (scoreboard == null) ? 0 : scoreboard.getDisplayedScore();
+    }
 
-	public GObject getElementAtLocation(double x, double y) {
-		return getElementAt(x, y);
-	}
+    public void addToScore(int delta) {
+        setScore(getScore() + delta);
+    }
 
-	@Override
-	public void mousePressed(MouseEvent e) {
-		if (currentScreen != null) {
-			currentScreen.mousePressed(e);
-		}
-	}
+    public GObject getElementAtLocation(double x, double y) {
+        return getElementAt(x, y);
+    }
 
-	@Override
-	public void mouseReleased(MouseEvent e) {
-		if (currentScreen != null) {
-			currentScreen.mouseReleased(e);
-		}
-	}
+    // ----- settings getters/setters -----
 
-	@Override
-	public void mouseClicked(MouseEvent e) {
-		if (currentScreen != null) {
-			currentScreen.mouseClicked(e);
-		}
-	}
+    public int getMainVolume() {
+        return mainVolume;
+    }
 
-	@Override
-	public void mouseDragged(MouseEvent e) {
-		if (currentScreen != null) {
-			currentScreen.mouseDragged(e);
-		}
-	}
+    public void setMainVolume(int mainVolume) {
+        this.mainVolume = clamp01(mainVolume);
+    }
 
-	@Override
-	public void mouseMoved(MouseEvent e) {
-		if (currentScreen != null) {
-			currentScreen.mouseMoved(e);
-		}
-	}
+    public int getSfxVolume() {
+        return sfxVolume;
+    }
 
-	@Override
-	public void keyPressed(KeyEvent e) {
-		if (currentScreen != null) {
-			currentScreen.keyPressed(e);
-		}
-	}
+    public void setSfxVolume(int sfxVolume) {
+        this.sfxVolume = clamp01(sfxVolume);
+    }
 
-	@Override
-	public void keyReleased(KeyEvent e) {
-		if (currentScreen != null) {
-			currentScreen.keyReleased(e);
-		}
-	}
+    public int getMusicVolume() {
+        return musicVolume;
+    }
 
-	@Override
-	public void keyTyped(KeyEvent e) {
-		if (currentScreen != null) {
-			currentScreen.keyTyped(e);
-		}
-	}
+    public void setMusicVolume(int musicVolume) {
+        this.musicVolume = clamp01(musicVolume);
+    }
+
+    public int getBrightness() {
+        return brightness;
+    }
+
+    public void setBrightness(int brightness) {
+        this.brightness = clamp01(brightness);
+    }
+
+    private int clamp01(int v) {
+        if (v < 0) return 0;
+        if (v > 100) return 100;
+        return v;
+    }
+
+    // ----- event forwarding -----
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+        if (currentScreen != null) {
+            currentScreen.mousePressed(e);
+        }
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        if (currentScreen != null) {
+            currentScreen.mouseReleased(e);
+        }
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        if (currentScreen != null) {
+            currentScreen.mouseClicked(e);
+        }
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent e) {
+        if (currentScreen != null) {
+            currentScreen.mouseDragged(e);
+        }
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        if (currentScreen != null) {
+            currentScreen.mouseMoved(e);
+        }
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (currentScreen != null) {
+            currentScreen.keyPressed(e);
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+        if (currentScreen != null) {
+            currentScreen.keyReleased(e);
+        }
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+        if (currentScreen != null) {
+            currentScreen.keyTyped(e);
+        }
+    }
 }

@@ -1,9 +1,6 @@
-import java.awt.Color;
-
 public class NormalRat extends Ratdg {
     public NormalRat(MainApplication app) {
-        super(app, RatType.NORMAL, 10, 1200); // 1.2s lifetime
-        // image centered around hole (tweak size/offset as needed)
+        super(app, RatType.NORMAL, 10, 1200);
         setSpriteFromFile("rat_normal.png", -30, -40, 60, 60);
     }
 }
