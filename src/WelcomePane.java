@@ -35,7 +35,7 @@ public class WelcomePane extends GraphicsPane {
         contents.clear();
     }
 
-    // ---------------- BACKGROUND (French vibe) ----------------
+    // ---------- Background (French vibe) ----------
     private void addBackground() {
         double w = mainScreen.getWidth();
         double h = mainScreen.getHeight();
@@ -73,7 +73,7 @@ public class WelcomePane extends GraphicsPane {
         mainScreen.add(centerPanel);
     }
 
-    // ---------------- EIFFEL TOWER ----------------
+    // ---------- Eiffel Tower ----------
     private void addEiffelTowerSilhouette() {
         double w = mainScreen.getWidth();
         double cx = w / 2.0;
@@ -99,14 +99,13 @@ public class WelcomePane extends GraphicsPane {
         mainScreen.add(tower);
     }
 
-    // ---------------- TITLE ----------------
+    // ---------- Title ----------
     private void addTitle() {
         double w = mainScreen.getWidth();
 
         GLabel title = new GLabel("WRECK IT RATS");
         title.setFont(new Font("Serif", Font.BOLD, 32));
         title.setColor(new Color(40, 40, 40));
-
         title.setLocation(
                 (w - title.getWidth()) / 2.0,
                 160
@@ -116,7 +115,7 @@ public class WelcomePane extends GraphicsPane {
         mainScreen.add(title);
     }
 
-    // ---------------- BUTTONS ----------------
+    // ---------- Buttons ----------
     private void addButtons() {
         double w = mainScreen.getWidth();
         double startY = 370;
@@ -164,7 +163,7 @@ public class WelcomePane extends GraphicsPane {
         if (clicked == startButtonImg) {
             mainScreen.switchToGameScreen();
         } else if (clicked == leaderboardsButtonImg) {
-            System.out.println("Leaderboards Page");
+            mainScreen.switchToLeaderboardScreen();
         } else if (clicked == settingsButtonImg) {
             mainScreen.switchToSettingsScreen();
         } else if (clicked == exitButtonImg) {

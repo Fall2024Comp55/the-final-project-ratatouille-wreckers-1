@@ -1,28 +1,45 @@
 import acm.graphics.GObject;
 import acm.program.GraphicsProgram;
 
+import javax.swing.JOptionPane;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainApplication extends GraphicsProgram {
-    // Settings
+    // Window
     public static final int WINDOW_WIDTH = 800;
     public static final int WINDOW_HEIGHT = 600;
 
-    // Stored settings values (0–100)
+    // Settings (0–100)
     private int mainVolume = 50;
     private int sfxVolume = 50;
     private int musicVolume = 50;
     private int brightness = 50;
 
-    // List of all the full screen panes
+    // Leaderboard entry
+    public static class ScoreEntry {
+        public final String name;
+        public final int score;
+        public ScoreEntry(String name, int score) {
+            this.name = name;
+            this.score = score;
+        }
+    }
+
+    // Leaderboard scores (top 10, highest first)
+    private final List<ScoreEntry> leaderboard = new ArrayList<>();
+
+    // Screens
     private WelcomePane welcomePane;
     private DescriptionPane descriptionPane;
     private GraphicsPane currentScreen;
     private SettingsPane settingsPane;
-    private GamePane gamePane;       // game screen
+    private GamePane gamePane;
+    private LeaderboardPane leaderboardPane;
 
-    // Scoreboard
+    // Scoreboard overlay
     private Scoreboard scoreboard;
 
     public MainApplication() {
@@ -35,25 +52,28 @@ public class MainApplication extends GraphicsProgram {
         addMouseListeners();
     }
 
+    @Override
     public void init() {
         setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
     }
 
+    @Override
     public void run() {
         System.out.println("Lets' Begin!");
         setupInteractions();
 
-        // Initialize all of your full screens
+        // Init screens
         welcomePane = new WelcomePane(this);
         descriptionPane = new DescriptionPane(this);
         settingsPane = new SettingsPane(this);
         gamePane = new GamePane(this);
+        leaderboardPane = new LeaderboardPane(this);
 
         // Scoreboard
         scoreboard = new Scoreboard(this);
-        scoreboard.update(0);   // Start at 0
+        scoreboard.update(0);
 
-        // The Default Pane
+        // Default screen
         switchToScreen(welcomePane);
     }
 
@@ -61,7 +81,7 @@ public class MainApplication extends GraphicsProgram {
         new MainApplication().start();
     }
 
-    // ----- screen switches -----
+    // ---------- Screen switching ----------
 
     public void switchToDescriptionScreen() {
         switchToScreen(descriptionPane);
@@ -71,12 +91,24 @@ public class MainApplication extends GraphicsProgram {
         switchToScreen(welcomePane);
     }
 
+    // Settings from main menu (or anywhere non-game)
     public void switchToSettingsScreen() {
+        settingsPane.setReturnToGame(false);
+        switchToScreen(settingsPane);
+    }
+
+    // Settings specifically from in-game pause menu
+    public void switchToSettingsFromGame() {
+        settingsPane.setReturnToGame(true);
         switchToScreen(settingsPane);
     }
 
     public void switchToGameScreen() {
         switchToScreen(gamePane);
+    }
+
+    public void switchToLeaderboardScreen() {
+        switchToScreen(leaderboardPane);
     }
 
     protected void switchToScreen(GraphicsPane newScreen) {
@@ -86,7 +118,7 @@ public class MainApplication extends GraphicsProgram {
         newScreen.showContent();
         currentScreen = newScreen;
 
-        // show scoreboard only on game screen
+        // scoreboard only visible in game
         if (newScreen == gamePane) {
             showScoreboard();
         } else {
@@ -94,7 +126,7 @@ public class MainApplication extends GraphicsProgram {
         }
     }
 
-    // ----- scoreboard -----
+    // ---------- Scoreboard ----------
 
     public void showScoreboard() {
         if (scoreboard != null) scoreboard.show();
@@ -120,7 +152,7 @@ public class MainApplication extends GraphicsProgram {
         return getElementAt(x, y);
     }
 
-    // ----- settings getters/setters -----
+    // ---------- Settings get/set ----------
 
     public int getMainVolume() {
         return mainVolume;
@@ -160,61 +192,77 @@ public class MainApplication extends GraphicsProgram {
         return v;
     }
 
-    // ----- event forwarding -----
+    // ---------- Leaderboard API ----------
+
+    /** Record a new score with player's name, keep top 10 highest. */
+    public void recordScore(int score) {
+        if (score < 0) score = 0;
+
+        String name = JOptionPane.showInputDialog(
+                getGCanvas(),
+                "Enter your name for score " + score + ":",
+                "New High Score",
+                JOptionPane.PLAIN_MESSAGE
+        );
+        if (name == null) {
+            // cancelled
+            name = "Player";
+        }
+        name = name.trim();
+        if (name.isEmpty()) name = "Player";
+
+        leaderboard.add(new ScoreEntry(name, score));
+        leaderboard.sort((a, b) -> Integer.compare(b.score, a.score)); // descending
+        if (leaderboard.size() > 10) {
+            leaderboard.subList(10, leaderboard.size()).clear();
+        }
+        System.out.println("Recorded score: " + score + " by " + name);
+    }
+
+    /** Get copy of leaderboard, highest first. */
+    public List<ScoreEntry> getLeaderboardEntries() {
+        return new ArrayList<>(leaderboard);
+    }
+
+    // ---------- Event forwarding ----------
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if (currentScreen != null) {
-            currentScreen.mousePressed(e);
-        }
+        if (currentScreen != null) currentScreen.mousePressed(e);
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        if (currentScreen != null) {
-            currentScreen.mouseReleased(e);
-        }
+        if (currentScreen != null) currentScreen.mouseReleased(e);
     }
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        if (currentScreen != null) {
-            currentScreen.mouseClicked(e);
-        }
+        if (currentScreen != null) currentScreen.mouseClicked(e);
     }
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        if (currentScreen != null) {
-            currentScreen.mouseDragged(e);
-        }
+        if (currentScreen != null) currentScreen.mouseDragged(e);
     }
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        if (currentScreen != null) {
-            currentScreen.mouseMoved(e);
-        }
+        if (currentScreen != null) currentScreen.mouseMoved(e);
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
-        if (currentScreen != null) {
-            currentScreen.keyPressed(e);
-        }
+        if (currentScreen != null) currentScreen.keyPressed(e);
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
-        if (currentScreen != null) {
-            currentScreen.keyReleased(e);
-        }
+        if (currentScreen != null) currentScreen.keyReleased(e);
     }
 
     @Override
     public void keyTyped(KeyEvent e) {
-        if (currentScreen != null) {
-            currentScreen.keyTyped(e);
-        }
+        if (currentScreen != null) currentScreen.keyTyped(e);
     }
 }

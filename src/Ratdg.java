@@ -1,4 +1,6 @@
-import acm.graphics.*;
+import acm.graphics.GCompound;
+import acm.graphics.GImage;
+import acm.graphics.GOval;
 
 import java.awt.Color;
 
@@ -64,7 +66,8 @@ public abstract class Ratdg {
 
     public void onMouseClick(int x, int y) { }
 
-    protected void setSpriteFromFile(String path, double offsetX, double offsetY, double width, double height) {
+    protected void setSpriteFromFile(String path, double offsetX, double offsetY,
+                                     double width, double height) {
         try {
             GImage img = new GImage(path);
             if (width > 0 && height > 0) {
@@ -72,7 +75,9 @@ public abstract class Ratdg {
             }
             node.add(img, offsetX, offsetY);
         } catch (Exception ex) {
-            GOval fallback = new GOval(0, 0, (width > 0 ? width : 40), (height > 0 ? height : 40));
+            GOval fallback = new GOval(0, 0,
+                    (width > 0 ? width : 40),
+                    (height > 0 ? height : 40));
             fallback.setFilled(true);
             fallback.setFillColor(new Color(160, 160, 160));
             fallback.setColor(Color.BLACK);
@@ -80,7 +85,6 @@ public abstract class Ratdg {
         }
     }
 
-    // helpers
     public boolean containsPoint(double x, double y) {
         return node.contains(x, y);
     }

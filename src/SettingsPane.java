@@ -1,11 +1,22 @@
-import acm.graphics.*;
+import acm.graphics.GLabel;
+import acm.graphics.GObject;
+import acm.graphics.GRect;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.event.MouseEvent;
 
 public class SettingsPane extends GraphicsPane {
     public SettingsPane(MainApplication mainScreen) {
         this.mainScreen = mainScreen;
+    }
+
+    // If true, we go back to the game after Save/Cancel.
+    // If false, we go back to the main menu.
+    private boolean returnToGame = false;
+
+    public void setReturnToGame(boolean value) {
+        this.returnToGame = value;
     }
 
     private class Slider {
@@ -39,19 +50,19 @@ public class SettingsPane extends GraphicsPane {
     }
 
     private void addUI() {
-        // translucent panel over the game
-        panelBg = new GRect(120, 70, 560, 430);
+        double w = mainScreen.getWidth();
+        double h = mainScreen.getHeight();
+
+        panelBg = new GRect(120, 70, w - 240, h - 140);
         panelBg.setFilled(true);
         panelBg.setFillColor(new Color(240, 240, 240));
         panelBg.setColor(new Color(80, 80, 80));
         contents.add(panelBg);
         mainScreen.add(panelBg);
 
-        // Title
         title = new GLabel("SETTINGS");
         title.setFont(new Font("Monospaced", Font.BOLD, 30));
         title.setColor(new Color(40, 40, 40));
-        title.setLocation(0, 0);
         title.setLocation(
                 panelBg.getX() + (panelBg.getWidth() - title.getWidth()) / 2.0,
                 panelBg.getY() + 50
@@ -63,13 +74,11 @@ public class SettingsPane extends GraphicsPane {
         int row1Y = (int) panelBg.getY() + 110;
         int rowGap = 70;
 
-        // Sliders initial values from MainApplication
         mainVol = createSlider("MAIN VOLUME", baseX, row1Y, mainScreen.getMainVolume());
         sfxVol = createSlider("SFX", baseX, row1Y + rowGap, mainScreen.getSfxVolume());
         musicVol = createSlider("MUSIC", baseX, row1Y + 2 * rowGap, mainScreen.getMusicVolume());
         brightness = createSlider("BRIGHTNESS", baseX, row1Y + 3 * rowGap, mainScreen.getBrightness());
 
-        // Buttons
         int btnY = (int) (panelBg.getY() + panelBg.getHeight() - 70);
         cancelButton = createButton(baseX + 30, btnY, 150, 45, "CANCEL");
         saveButton = createButton(baseX + 260, btnY, 150, 45, "SAVE");
@@ -79,9 +88,8 @@ public class SettingsPane extends GraphicsPane {
         Slider s = new Slider();
         s.x = x;
         s.y = y;
-        s.value = initialValue; // 0–100
+        s.value = initialValue;
 
-        // label
         s.label = new GLabel(text);
         s.label.setFont(new Font("Monospaced", Font.BOLD, 18));
         s.label.setColor(new Color(30, 30, 30));
@@ -89,7 +97,6 @@ public class SettingsPane extends GraphicsPane {
         contents.add(s.label);
         mainScreen.add(s.label);
 
-        // track
         s.track = new GRect(x + 200, y - 18, 260, 10);
         s.track.setFilled(true);
         s.track.setFillColor(new Color(200, 200, 200));
@@ -97,7 +104,6 @@ public class SettingsPane extends GraphicsPane {
         contents.add(s.track);
         mainScreen.add(s.track);
 
-        // handle
         s.handle = new GRect(0, 0, 18, 28);
         s.handle.setFilled(true);
         s.handle.setFillColor(new Color(80, 80, 80));
@@ -146,23 +152,25 @@ public class SettingsPane extends GraphicsPane {
         if (obj == null) return;
 
         if (obj == saveButton || obj == saveLabel) {
-            // Save into MainApplication
+            // Save settings
             mainScreen.setMainVolume(mainVol.value);
             mainScreen.setSfxVolume(sfxVol.value);
             mainScreen.setMusicVolume(musicVol.value);
             mainScreen.setBrightness(brightness.value);
 
-            System.out.println("Saved Values:");
-            System.out.println("Main Volume: " + mainVol.value);
-            System.out.println("SFX: " + sfxVol.value);
-            System.out.println("Music: " + musicVol.value);
-            System.out.println("Brightness: " + brightness.value);
-
-            mainScreen.switchToWelcomeScreen();
-        }
-
-        if (obj == cancelButton || obj == cancelLabel || obj == panelBg) {
-            mainScreen.switchToWelcomeScreen();
+            // Go back where we came from
+            if (returnToGame) {
+                mainScreen.switchToGameScreen();
+            } else {
+                mainScreen.switchToWelcomeScreen();
+            }
+        } else if (obj == cancelButton || obj == cancelLabel || obj == panelBg) {
+            // Discard & go back
+            if (returnToGame) {
+                mainScreen.switchToGameScreen();
+            } else {
+                mainScreen.switchToWelcomeScreen();
+            }
         }
     }
 

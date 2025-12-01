@@ -1,5 +1,6 @@
 public enum RatType {
     NORMAL,
     BONUS,
-    TRAP
+    TRAP,
+    BOSS       // <<< NEW
 }
