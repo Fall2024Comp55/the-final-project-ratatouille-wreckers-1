@@ -5,35 +5,44 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 public class GamePane extends GraphicsPane {
 
-    // --- Layout ---
+    // Layout
     private static final int ROWS = 3;
     private static final int COLS = 4;
     private static final double GRID_WIDTH = 520;
     private static final double GRID_HEIGHT = 260;
     private static final double HOLE_RADIUS = 30;
 
-    // --- Game timing ---
+    // Timing
     private static final int TICK_MS = 40;
     private static final double SPAWN_CHANCE = 0.05;
     private static final int MAX_ACTIVE_RATS = 5;
-
     private static final int GAME_DURATION_MS = 3 * 60 * 1000;  // 3 minutes
-    private static final int BOSS_DURATION_MS = 30 * 1000;      // 30 seconds
+    private static final int BOSS_DURATION_MS = 45 * 1000;      // 45 seconds
+
+    // HP / boss
+    private static final int PLAYER_MAX_HP = 100;
+    private static final int BOSS_MAX_HP = 300;
+    private static final int BOSS_ATTACK_INTERVAL_MS = 1500;
+    private static final int BOSS_ATTACK_DAMAGE = 10;
+    private static final int BOSS_HIT_DAMAGE = 25;
 
     private enum Phase { NORMAL, BOSS, FINISHED }
     private Phase phase = Phase.NORMAL;
 
     private int timeRemainingMs = GAME_DURATION_MS;
 
-    // --- Game state ---
+    private int playerHp = PLAYER_MAX_HP;
+    private int bossHp = BOSS_MAX_HP;
+    private int bossAttackTimerMs = 0;
+
     private final List<Hole> holes = new ArrayList<>();
     private final List<Ratdg> activeRats = new ArrayList<>();
     private final Random rng = new Random();
@@ -46,10 +55,16 @@ public class GamePane extends GraphicsPane {
     private GLabel gameOverLabel;
     private GLabel phaseLabel;
 
+    // HP bars
+    private GRect playerHpBack, playerHpFill;
+    private GLabel playerHpLabel;
+    private GRect bossHpBack, bossHpFill;
+    private GLabel bossHpLabel;
+
     private boolean scoreRecorded = false;
     private BossRat bossRat = null;
 
-    // --- Pause menu state ---
+    // Pause menu
     private boolean paused = false;
     private GRect pauseOverlay;
     private GRect pausePanel;
@@ -63,38 +78,43 @@ public class GamePane extends GraphicsPane {
 
     public GamePane(MainApplication mainScreen) {
         this.mainScreen = mainScreen;
-        buildBoard();
-        setupTimer();
+        setupTimer(); // NOTE: we DO NOT call buildBoard() here
     }
 
-    // --------------------------------------------------------
-    // Lifecycle
-    // --------------------------------------------------------
     @Override
     public void showContent() {
+        // wipe any previous drawings
         for (GObject obj : contents) {
-            mainScreen.add(obj);
+            mainScreen.remove(obj);
         }
-        if (hammer != null) {
-            hammer.sendToFront();
-        }
-        if (timer != null) {
-            phase = Phase.NORMAL;
-            timeRemainingMs = GAME_DURATION_MS;
-            scoreRecorded = false;
-            bossRat = null;
-            paused = false;
-            updateTimerLabel();
-            mainScreen.setScore(0);
-            timer.start();
-        }
+        contents.clear();
+        holes.clear();
+        activeRats.clear();
+        bossRat = null;
+
+        // draw the board/UI
+        buildBoard();
+
+        // reset game state
+        phase = Phase.NORMAL;
+        timeRemainingMs = GAME_DURATION_MS;
+        playerHp = PLAYER_MAX_HP;
+        bossHp = BOSS_MAX_HP;
+        bossAttackTimerMs = 0;
+        scoreRecorded = false;
+        paused = false;
+
+        updateTimerLabel();
+        updatePlayerHpBar();
+        updateBossHpBar();
+        mainScreen.setScore(0);
+
+        if (timer != null) timer.start();
     }
 
     @Override
     public void hideContent() {
-        if (timer != null) {
-            timer.stop();
-        }
+        if (timer != null) timer.stop();
 
         for (Ratdg r : activeRats) {
             r.despawn();
@@ -108,29 +128,29 @@ public class GamePane extends GraphicsPane {
         contents.clear();
 
         paused = false;
-        buildBoard();
     }
 
     // --------------------------------------------------------
-    // Build visuals (background, board, holes, top bar)
+    // Build board + UI
     // --------------------------------------------------------
     private void buildBoard() {
         double w = mainScreen.getWidth();
         double h = mainScreen.getHeight();
 
-        // Sky
+        // Sky & ground
         GRect sky = new GRect(0, 0, w, h * 0.6);
         sky.setFilled(true);
         sky.setFillColor(new Color(180, 210, 255));
         sky.setColor(Color.BLACK);
         contents.add(sky);
+        mainScreen.add(sky);
 
-        // Ground
         GRect ground = new GRect(0, h * 0.6, w, h * 0.4);
         ground.setFilled(true);
         ground.setFillColor(new Color(105, 180, 100));
         ground.setColor(Color.BLACK);
         contents.add(ground);
+        mainScreen.add(ground);
 
         // Top bar
         topBar = new GRect(0, 0, w, 60);
@@ -138,60 +158,107 @@ public class GamePane extends GraphicsPane {
         topBar.setFillColor(new Color(35, 35, 35));
         topBar.setColor(Color.BLACK);
         contents.add(topBar);
+        mainScreen.add(topBar);
 
-        // French flag behind title
+        // French-flag title bar
         double flagW = 260;
         double flagH = 32;
         double flagX = (w - flagW) / 2.0;
         double flagY = 14;
 
-        Color frenchBlue = new Color(58, 91, 170);
-        Color frenchWhite = new Color(245, 245, 245);
-        Color frenchRed = new Color(203, 58, 74);
+        Color blue = new Color(58, 91, 170);
+        Color white = new Color(245, 245, 245);
+        Color red = new Color(203, 58, 74);
 
         GRect stripeBlue = new GRect(flagX, flagY, flagW / 3.0, flagH);
         stripeBlue.setFilled(true);
-        stripeBlue.setFillColor(frenchBlue);
-        stripeBlue.setColor(frenchBlue);
+        stripeBlue.setFillColor(blue);
+        stripeBlue.setColor(blue);
         contents.add(stripeBlue);
+        mainScreen.add(stripeBlue);
 
         GRect stripeWhite = new GRect(flagX + flagW / 3.0, flagY, flagW / 3.0, flagH);
         stripeWhite.setFilled(true);
-        stripeWhite.setFillColor(frenchWhite);
-        stripeWhite.setColor(frenchWhite);
+        stripeWhite.setFillColor(white);
+        stripeWhite.setColor(white);
         contents.add(stripeWhite);
+        mainScreen.add(stripeWhite);
 
         GRect stripeRed = new GRect(flagX + 2 * flagW / 3.0, flagY, flagW / 3.0, flagH);
         stripeRed.setFilled(true);
-        stripeRed.setFillColor(frenchRed);
-        stripeRed.setColor(frenchRed);
+        stripeRed.setFillColor(red);
+        stripeRed.setColor(red);
         contents.add(stripeRed);
+        mainScreen.add(stripeRed);
 
-        // Title over flag
         GLabel title = new GLabel("WRECK-IT RATZ");
         title.setFont(new Font("Monospaced", Font.BOLD, 20));
         title.setColor(Color.BLACK);
-        title.setLocation(
-                (w - title.getWidth()) / 2.0,
-                flagY + flagH * 0.7
-        );
+        title.setLocation((w - title.getWidth()) / 2.0, flagY + flagH * 0.7);
         contents.add(title);
+        mainScreen.add(title);
 
-        // Timer on left
+        // Timer (left)
         timerLabel = new GLabel("03:00");
         timerLabel.setFont(new Font("Monospaced", Font.BOLD, 18));
         timerLabel.setColor(Color.WHITE);
         timerLabel.setLocation(20, 36);
         contents.add(timerLabel);
+        mainScreen.add(timerLabel);
 
-        // Back button next to timer
+        // Back text
         backLabel = new GLabel("< BACK");
         backLabel.setFont(new Font("Monospaced", Font.BOLD, 16));
         backLabel.setColor(new Color(220, 220, 220));
         backLabel.setLocation(120, 36);
         contents.add(backLabel);
+        mainScreen.add(backLabel);
 
-        // Board (nicer wood look with inner panel)
+        // Player HP bar (left)
+        playerHpBack = new GRect(20, 50, 160, 10);
+        playerHpBack.setFilled(true);
+        playerHpBack.setFillColor(new Color(80, 80, 80));
+        playerHpBack.setColor(Color.BLACK);
+        contents.add(playerHpBack);
+        mainScreen.add(playerHpBack);
+
+        playerHpFill = new GRect(20, 50, 160, 10);
+        playerHpFill.setFilled(true);
+        playerHpFill.setFillColor(new Color(60, 200, 80));
+        playerHpFill.setColor(Color.BLACK);
+        contents.add(playerHpFill);
+        mainScreen.add(playerHpFill);
+
+        playerHpLabel = new GLabel("HP");
+        playerHpLabel.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        playerHpLabel.setColor(Color.WHITE);
+        playerHpLabel.setLocation(20, 48);
+        contents.add(playerHpLabel);
+        mainScreen.add(playerHpLabel);
+
+        // Boss HP bar (center top)
+        bossHpBack = new GRect(w / 2.0 - 180, 10, 360, 8);
+        bossHpBack.setFilled(true);
+        bossHpBack.setFillColor(new Color(90, 90, 90));
+        bossHpBack.setColor(Color.BLACK);
+        contents.add(bossHpBack);
+        mainScreen.add(bossHpBack);
+
+        bossHpFill = new GRect(w / 2.0 - 180, 10, 360, 8);
+        bossHpFill.setFilled(true);
+        bossHpFill.setFillColor(new Color(220, 60, 60));
+        bossHpFill.setColor(Color.BLACK);
+        contents.add(bossHpFill);
+        mainScreen.add(bossHpFill);
+
+        bossHpLabel = new GLabel("BOSS HP");
+        bossHpLabel.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        bossHpLabel.setColor(Color.WHITE);
+        bossHpLabel.setLocation(w / 2.0 - bossHpLabel.getWidth() / 2.0, 9);
+        contents.add(bossHpLabel);
+        mainScreen.add(bossHpLabel);
+
+        // Board wood
         double boardW = GRID_WIDTH + 80;
         double boardH = GRID_HEIGHT + 80;
         double boardX = (w - boardW) / 2.0;
@@ -202,22 +269,27 @@ public class GamePane extends GraphicsPane {
         boardOuter.setFillColor(new Color(130, 96, 60));
         boardOuter.setColor(new Color(80, 55, 35));
         contents.add(boardOuter);
+        mainScreen.add(boardOuter);
 
-        GRect boardInner = new GRect(
-                boardX + 10, boardY + 10,
-                boardW - 20, boardH - 20
-        );
+        GRect boardInner = new GRect(boardX + 10, boardY + 10, boardW - 20, boardH - 20);
         boardInner.setFilled(true);
         boardInner.setFillColor(new Color(156, 120, 80));
         boardInner.setColor(new Color(90, 65, 40));
         contents.add(boardInner);
+        mainScreen.add(boardInner);
 
-        // subtle "grain" stripes
+        // wood grain
         for (int i = 0; i < 6; i++) {
             double lx = boardInner.getX() + 20 + i * (boardInner.getWidth() / 6.0);
-            GLine grain = new GLine(lx, boardInner.getY() + 5, lx, boardInner.getY() + boardInner.getHeight() - 5);
+            GLine grain = new GLine(
+                    lx,
+                    boardInner.getY() + 5,
+                    lx,
+                    boardInner.getY() + boardInner.getHeight() - 5
+            );
             grain.setColor(new Color(150, 115, 75));
             contents.add(grain);
+            mainScreen.add(grain);
         }
 
         // Holes
@@ -227,41 +299,36 @@ public class GamePane extends GraphicsPane {
         double cellH = GRID_HEIGHT / (ROWS - 1);
 
         holes.clear();
-
         for (int row = 0; row < ROWS; row++) {
             for (int col = 0; col < COLS; col++) {
                 double cx = startX + col * cellW;
                 double cy = startY + row * cellH;
 
-                GOval shadow = new GOval(
-                        cx - HOLE_RADIUS, cy - HOLE_RADIUS + 6,
-                        HOLE_RADIUS * 2, HOLE_RADIUS * 2
-                );
+                GOval shadow = new GOval(cx - HOLE_RADIUS, cy - HOLE_RADIUS + 6,
+                        HOLE_RADIUS * 2, HOLE_RADIUS * 2);
                 shadow.setFilled(true);
                 shadow.setFillColor(new Color(45, 35, 25));
                 shadow.setColor(new Color(25, 18, 10));
                 contents.add(shadow);
+                mainScreen.add(shadow);
 
-                GOval rim = new GOval(
-                        cx - HOLE_RADIUS, cy - HOLE_RADIUS,
-                        HOLE_RADIUS * 2, HOLE_RADIUS * 2
-                );
+                GOval rim = new GOval(cx - HOLE_RADIUS, cy - HOLE_RADIUS,
+                        HOLE_RADIUS * 2, HOLE_RADIUS * 2);
                 rim.setFilled(true);
                 rim.setFillColor(new Color(80, 55, 35));
                 rim.setColor(Color.BLACK);
                 contents.add(rim);
+                mainScreen.add(rim);
 
-                GOval inner = new GOval(
-                        cx - HOLE_RADIUS + 4, cy - HOLE_RADIUS + 4,
-                        HOLE_RADIUS * 2 - 8, HOLE_RADIUS * 2 - 8
-                );
+                GOval inner = new GOval(cx - HOLE_RADIUS + 4, cy - HOLE_RADIUS + 4,
+                        HOLE_RADIUS * 2 - 8, HOLE_RADIUS * 2 - 8);
                 inner.setFilled(true);
                 inner.setFillColor(new Color(60, 42, 28));
                 inner.setColor(new Color(40, 28, 18));
                 contents.add(inner);
+                mainScreen.add(inner);
 
-                Hole hHole = new Hole(cx, cy);
-                holes.add(hHole);
+                holes.add(new Hole(cx, cy));
             }
         }
 
@@ -272,6 +339,7 @@ public class GamePane extends GraphicsPane {
         hammerShape.setColor(Color.BLACK);
         hammer = hammerShape;
         contents.add(hammer);
+        mainScreen.add(hammer);
     }
 
     private void setupTimer() {
@@ -284,7 +352,7 @@ public class GamePane extends GraphicsPane {
     }
 
     // --------------------------------------------------------
-    // Core game loop
+    // Game loop
     // --------------------------------------------------------
     private void tick(int deltaMs) {
         if (paused) return;
@@ -306,6 +374,24 @@ public class GamePane extends GraphicsPane {
         if (phase == Phase.NORMAL && timeRemainingMs > 0) {
             maybeSpawn();
         }
+
+        if (phase == Phase.BOSS && bossRat != null && bossRat.isVisible()) {
+            bossAttackTimerMs += deltaMs;
+            if (bossAttackTimerMs >= BOSS_ATTACK_INTERVAL_MS) {
+                bossAttackTimerMs = 0;
+                playerHp -= BOSS_ATTACK_DAMAGE;
+                if (playerHp < 0) playerHp = 0;
+                updatePlayerHpBar();
+                if (playerHp == 0) {
+                    phase = Phase.FINISHED;
+                    if (!scoreRecorded) {
+                        scoreRecorded = true;
+                        mainScreen.recordScore(mainScreen.getScore());
+                    }
+                    showGameOverOverlay("YOU WERE WRECKED!");
+                }
+            }
+        }
     }
 
     private void onTimeExpired() {
@@ -326,19 +412,14 @@ public class GamePane extends GraphicsPane {
         timeRemainingMs = BOSS_DURATION_MS;
         updateTimerLabel();
 
-        for (Ratdg r : activeRats) {
-            r.despawn();
-        }
+        for (Ratdg r : activeRats) r.despawn();
         activeRats.clear();
 
         double w = mainScreen.getWidth();
         phaseLabel = new GLabel("BOSS FIGHT!");
         phaseLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
         phaseLabel.setColor(new Color(230, 230, 80));
-        phaseLabel.setLocation(
-                (w - phaseLabel.getWidth()) / 2.0,
-                85
-        );
+        phaseLabel.setLocation((w - phaseLabel.getWidth()) / 2.0, 85);
         contents.add(phaseLabel);
         mainScreen.add(phaseLabel);
 
@@ -348,23 +429,41 @@ public class GamePane extends GraphicsPane {
         activeRats.add(bossRat);
         Hole temp = new Hole(centerX, centerY);
         temp.spawn(bossRat);
+
+        bossHp = BOSS_MAX_HP;
+        bossAttackTimerMs = 0;
+        updateBossHpBar();
     }
 
     private void updateTimerLabel() {
         int totalSeconds = timeRemainingMs / 1000;
         int minutes = totalSeconds / 60;
         int seconds = totalSeconds % 60;
+        timerLabel.setLabel(String.format("%02d:%02d", minutes, seconds));
+    }
 
-        String text = String.format("%02d:%02d", minutes, seconds);
-        timerLabel.setLabel(text);
+    private void updatePlayerHpBar() {
+        double ratio = playerHp / (double) PLAYER_MAX_HP;
+        double fullWidth = 160;
+        playerHpFill.setSize(fullWidth * ratio, playerHpFill.getHeight());
+
+        if (ratio > 0.6) playerHpFill.setFillColor(new Color(60, 200, 80));
+        else if (ratio > 0.3) playerHpFill.setFillColor(new Color(230, 190, 60));
+        else playerHpFill.setFillColor(new Color(220, 60, 60));
+    }
+
+    private void updateBossHpBar() {
+        double ratio = bossHp / (double) BOSS_MAX_HP;
+        double fullWidth = 360;
+        bossHpFill.setSize(fullWidth * ratio, bossHpFill.getHeight());
     }
 
     private void maybeSpawn() {
-        int currentlyVisible = 0;
+        int visible = 0;
         for (Hole h : holes) {
-            if (h.isOccupied()) currentlyVisible++;
+            if (h.isOccupied()) visible++;
         }
-        if (currentlyVisible >= MAX_ACTIVE_RATS) return;
+        if (visible >= MAX_ACTIVE_RATS) return;
 
         if (rng.nextDouble() > SPAWN_CHANCE) return;
 
@@ -378,29 +477,24 @@ public class GamePane extends GraphicsPane {
 
         Ratdg rat;
         double p = rng.nextDouble();
-        if (p < 0.65) {
-            rat = new NormalRat(mainScreen);
-        } else if (p < 0.9) {
-            rat = new BonusRat(mainScreen);
-        } else {
-            rat = new TrapRat(mainScreen);
-        }
+        if (p < 0.65) rat = new NormalRat(mainScreen);
+        else if (p < 0.9) rat = new BonusRat(mainScreen);
+        else rat = new TrapRat(mainScreen);
 
         activeRats.add(rat);
         hole.spawn(rat);
     }
 
     private void showGameOverOverlay(String text) {
+        if (timer != null) timer.stop();
+
         double w = mainScreen.getWidth();
         double h = mainScreen.getHeight();
 
         gameOverLabel = new GLabel(text);
         gameOverLabel.setFont(new Font("SansSerif", Font.BOLD, 32));
         gameOverLabel.setColor(Color.WHITE);
-        gameOverLabel.setLocation(
-                (w - gameOverLabel.getWidth()) / 2.0,
-                h * 0.45
-        );
+        gameOverLabel.setLocation((w - gameOverLabel.getWidth()) / 2.0, h * 0.45);
 
         GRect shadow = new GRect(
                 gameOverLabel.getX() - 30,
@@ -426,11 +520,8 @@ public class GamePane extends GraphicsPane {
     // Pause menu
     // --------------------------------------------------------
     private void togglePause() {
-        if (paused) {
-            hidePauseMenu();
-        } else {
-            showPauseMenu();
-        }
+        if (phase == Phase.FINISHED) return;
+        if (paused) hidePauseMenu(); else showPauseMenu();
     }
 
     private void showPauseMenu() {
@@ -441,7 +532,6 @@ public class GamePane extends GraphicsPane {
         double w = mainScreen.getWidth();
         double h = mainScreen.getHeight();
 
-        // semi-transparent overlay
         pauseOverlay = new GRect(0, 0, w, h);
         pauseOverlay.setFilled(true);
         pauseOverlay.setFillColor(new Color(0, 0, 0, 120));
@@ -449,7 +539,6 @@ public class GamePane extends GraphicsPane {
         contents.add(pauseOverlay);
         mainScreen.add(pauseOverlay);
 
-        // center panel
         double panelW = 320;
         double panelH = 230;
         double panelX = (w - panelW) / 2.0;
@@ -545,9 +634,7 @@ public class GamePane extends GraphicsPane {
         resumeLabel = settingsLabel = exitLabel = null;
         pauseTitleLabel = null;
 
-        if (phase != Phase.FINISHED && timer != null) {
-            timer.start();
-        }
+        if (phase != Phase.FINISHED && timer != null) timer.start();
     }
 
     private void removeIfNotNull(GObject obj) {
@@ -618,28 +705,34 @@ public class GamePane extends GraphicsPane {
     }
 
     private void handleWhack(double x, double y) {
+        // boss click
         if (phase == Phase.BOSS && bossRat != null && bossRat.isVisible()
                 && bossRat.containsPoint(x, y)) {
 
+            bossHp -= BOSS_HIT_DAMAGE;
+            if (bossHp < 0) bossHp = 0;
+            updateBossHpBar();
             mainScreen.addToScore(250);
-            bossRat.despawn();
-            activeRats.remove(bossRat);
-            bossRat = null;
 
-            phase = Phase.FINISHED;
-            timeRemainingMs = 0;
-            updateTimerLabel();
+            if (bossHp == 0) {
+                bossRat.despawn();
+                activeRats.remove(bossRat);
+                bossRat = null;
+                phase = Phase.FINISHED;
+                timeRemainingMs = 0;
+                updateTimerLabel();
 
-            if (!scoreRecorded) {
-                scoreRecorded = true;
-                mainScreen.recordScore(mainScreen.getScore());
+                if (!scoreRecorded) {
+                    scoreRecorded = true;
+                    mainScreen.recordScore(mainScreen.getScore());
+                }
+                showGameOverOverlay("BOSS DEFEATED!");
             }
-            showGameOverOverlay("BOSS DEFEATED!");
             return;
         }
 
+        // normal rats
         boolean hit = false;
-
         for (Ratdg r : activeRats) {
             if (r == bossRat) continue;
             if (r.isVisible() && r.containsPoint(x, y)) {

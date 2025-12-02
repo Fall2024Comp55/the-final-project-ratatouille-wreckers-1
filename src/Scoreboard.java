@@ -20,7 +20,6 @@ public class Scoreboard {
     private int displayedScore = 0;
     private boolean visible = false;
 
-    // DEFAULT: top-right now
     private Anchor anchor = Anchor.TOP_RIGHT;
     private int padding = 10;
     private int hPad = 10, vPad = 6;
@@ -62,7 +61,8 @@ public class Scoreboard {
     public void showForSeconds(int seconds) {
         show();
         new Timer(seconds * 1000, new ActionListener() {
-            @Override public void actionPerformed(ActionEvent e) {
+            @Override
+            public void actionPerformed(ActionEvent e) {
                 hide();
                 ((Timer) e.getSource()).stop();
             }
