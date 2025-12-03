@@ -12,6 +12,13 @@ import javax.imageio.ImageIO;
 import java.io.File;
 // ---------------------------------
 
+// --- Imports for sound playback ---
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.FloatControl;
+// -----------------------------------
+
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -117,6 +124,31 @@ public class MainApplication extends GraphicsProgram {
         }
     }
 
+    // ---------- SOUND EFFECT METHOD ----------
+    public void playSound(String filePath) {
+        try {
+            File soundFile = new File(filePath);
+            if (!soundFile.exists()) {
+                System.out.println("Sound not found: " + filePath);
+                return;
+            }
+
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(soundFile);
+            Clip clip = AudioSystem.getClip();
+            clip.open(audioStream);
+
+            // --- Apply volume (SFX Volume 0–100 converted to decibels) ---
+            FloatControl gain = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+            float volumeDb = (float)(Math.log10(sfxVolume / 100.0) * 20.0);
+            gain.setValue(volumeDb);
+
+            clip.start();
+
+        } catch (Exception e) {
+            System.out.println("ERROR playing sound: " + e.getMessage());
+        }
+    }
+
     // ---------- Screen switching ----------
 
     public void switchToWelcomeScreen() {
@@ -167,7 +199,6 @@ public class MainApplication extends GraphicsProgram {
     }
 
     // ---------- Scoreboard ----------
-
     public void showScoreboard() {
         if (scoreboard != null) scoreboard.show();
     }
@@ -192,8 +223,7 @@ public class MainApplication extends GraphicsProgram {
         return getElementAt(x, y);
     }
 
-    // ---------- Settings values ----------
-
+    // ---------- Settings ----------
     public int getMainVolume() {
         return mainVolume;
     }
@@ -243,7 +273,6 @@ public class MainApplication extends GraphicsProgram {
     }
 
     // ---------- Leaderboard ----------
-
     public void recordScore(int score) {
         if (score < 0) score = 0;
 
@@ -269,7 +298,6 @@ public class MainApplication extends GraphicsProgram {
     }
 
     // ---------- Event forwarding ----------
-
     @Override
     public void mousePressed(MouseEvent e) {
         if (currentScreen != null) currentScreen.mousePressed(e);

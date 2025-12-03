@@ -106,12 +106,16 @@ public class WelcomePane extends GraphicsPane {
         if (clicked == null) return;
 
         if (clicked == startButtonImg) {
+        	mainScreen.playSound("Media/hammer_hit.wav");
             mainScreen.switchToGameScreen();
         } else if (clicked == leaderboardsButtonImg) {
+        	mainScreen.playSound("Media/hammer_hit.wav");
             mainScreen.switchToLeaderboardScreen();
         } else if (clicked == settingsButtonImg) {
+        	mainScreen.playSound("Media/hammer_hit.wav");
             mainScreen.switchToSettingsScreen();
         } else if (clicked == exitButtonImg) {
+        	mainScreen.playSound("Media/hammer_hit.wav");
             System.exit(0);
         }
     }
