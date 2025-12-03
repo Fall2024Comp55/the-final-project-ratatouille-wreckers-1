@@ -333,13 +333,13 @@ public class GamePane extends GraphicsPane {
         }
 
         // Hammer
-        GOval hammerShape = new GOval(0, 0, 40, 40);
-        hammerShape.setFilled(true);
-        hammerShape.setFillColor(new Color(230, 70, 70));
-        hammerShape.setColor(Color.BLACK);
-        hammer = hammerShape;
-        contents.add(hammer);
-        mainScreen.add(hammer);
+//        GOval hammerShape = new GOval(0, 0, 40, 40);
+//        hammerShape.setFilled(true);
+//        hammerShape.setFillColor(new Color(230, 70, 70));
+//        hammerShape.setColor(Color.BLACK);
+//        hammer = hammerShape;      
+//        contents.add(hammer);
+//        mainScreen.add(hammer);
     }
 
     private void setupTimer() {
