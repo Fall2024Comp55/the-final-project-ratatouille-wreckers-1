@@ -44,7 +44,8 @@ public class MainApplication extends GraphicsProgram {
     private DescriptionPane descriptionPane;
     private GraphicsPane currentScreen;
     private SettingsPane settingsPane;
-    private GamePane gamePane;
+    private GamePane gamePane;       // Level 1 (normal)
+    private GamePane bossPane;       // Level 2 (boss-only)
     private LeaderboardPane leaderboardPane;
 
     // Score overlay
@@ -76,7 +77,8 @@ public class MainApplication extends GraphicsProgram {
         welcomePane = new WelcomePane(this);
         descriptionPane = new DescriptionPane(this);
         settingsPane = new SettingsPane(this);
-        gamePane = new GamePane(this);
+        gamePane = new GamePane(this);          // normal level
+        bossPane = new GamePane(this, true);    // boss level
         leaderboardPane = new LeaderboardPane(this);
 
         scoreboard = new Scoreboard(this);
@@ -126,6 +128,10 @@ public class MainApplication extends GraphicsProgram {
         switchToScreen(gamePane);
     }
 
+    public void switchToBossScreen() {
+        switchToScreen(bossPane);
+    }
+
     public void switchToLeaderboardScreen() {
         switchToScreen(leaderboardPane);
     }
@@ -149,8 +155,8 @@ public class MainApplication extends GraphicsProgram {
         newScreen.showContent();
         currentScreen = newScreen;
 
-        // Score only in game
-        if (newScreen == gamePane) {
+        // Score only in game screens
+        if (newScreen == gamePane || newScreen == bossPane) {
             showScoreboard();
         } else {
             hideScoreboard();

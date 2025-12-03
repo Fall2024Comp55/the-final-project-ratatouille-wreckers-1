@@ -24,8 +24,8 @@ public class GamePane extends GraphicsPane {
     private static final int TICK_MS = 40;
     private static final double SPAWN_CHANCE = 0.05;
     private static final int MAX_ACTIVE_RATS = 5;
-    private static final int GAME_DURATION_MS = 3 * 60 * 1000;  // 3 minutes
-    private static final int BOSS_DURATION_MS = 45 * 1000;      // 45 seconds
+    private static final int GAME_DURATION_MS = 1*60 * 1000;  // 1 minutes (level 1)
+    private static final int BOSS_DURATION_MS = 1* 60 * 1000;      // 1 Minute(boss level)
 
     // HP / boss
     private static final int PLAYER_MAX_HP = 100;
@@ -76,14 +76,24 @@ public class GamePane extends GraphicsPane {
     private GLabel exitLabel;
     private GLabel pauseTitleLabel;
 
+    // NEW: when true this pane is the dedicated boss level
+    private final boolean bossModeOnly;
+
+    // Level 1 constructor (normal rats, no boss UI)
     public GamePane(MainApplication mainScreen) {
+        this(mainScreen, false);
+    }
+
+    // Level 2 constructor (boss-only)
+    public GamePane(MainApplication mainScreen, boolean bossModeOnly) {
         this.mainScreen = mainScreen;
-        setupTimer(); // NOTE: we DO NOT call buildBoard() here
+        this.bossModeOnly = bossModeOnly;
+        setupTimer();
     }
 
     @Override
     public void showContent() {
-        // wipe any previous drawings
+        // clear previous drawings
         for (GObject obj : contents) {
             mainScreen.remove(obj);
         }
@@ -92,12 +102,12 @@ public class GamePane extends GraphicsPane {
         activeRats.clear();
         bossRat = null;
 
-        // draw the board/UI
+        // draw board + UI
         buildBoard();
 
-        // reset game state
+        // reset state
         phase = Phase.NORMAL;
-        timeRemainingMs = GAME_DURATION_MS;
+        timeRemainingMs = bossModeOnly ? BOSS_DURATION_MS : GAME_DURATION_MS;
         playerHp = PLAYER_MAX_HP;
         bossHp = BOSS_MAX_HP;
         bossAttackTimerMs = 0;
@@ -108,6 +118,11 @@ public class GamePane extends GraphicsPane {
         updatePlayerHpBar();
         updateBossHpBar();
         mainScreen.setScore(0);
+
+        // boss level starts directly in boss phase
+        if (bossModeOnly) {
+            startBossPhase();
+        }
 
         if (timer != null) timer.start();
     }
@@ -160,7 +175,7 @@ public class GamePane extends GraphicsPane {
         contents.add(topBar);
         mainScreen.add(topBar);
 
-        // French-flag title bar
+        // French flag title
         double flagW = 260;
         double flagH = 32;
         double flagX = (w - flagW) / 2.0;
@@ -198,7 +213,7 @@ public class GamePane extends GraphicsPane {
         contents.add(title);
         mainScreen.add(title);
 
-        // Timer (left)
+        // Timer
         timerLabel = new GLabel("03:00");
         timerLabel.setFont(new Font("Monospaced", Font.BOLD, 18));
         timerLabel.setColor(Color.WHITE);
@@ -206,7 +221,7 @@ public class GamePane extends GraphicsPane {
         contents.add(timerLabel);
         mainScreen.add(timerLabel);
 
-        // Back text
+        // Back
         backLabel = new GLabel("< BACK");
         backLabel.setFont(new Font("Monospaced", Font.BOLD, 16));
         backLabel.setColor(new Color(220, 220, 220));
@@ -214,49 +229,55 @@ public class GamePane extends GraphicsPane {
         contents.add(backLabel);
         mainScreen.add(backLabel);
 
-        // Player HP bar (left)
+        // Player HP (only in boss level)
         playerHpBack = new GRect(20, 50, 160, 10);
         playerHpBack.setFilled(true);
         playerHpBack.setFillColor(new Color(80, 80, 80));
         playerHpBack.setColor(Color.BLACK);
-        contents.add(playerHpBack);
-        mainScreen.add(playerHpBack);
 
         playerHpFill = new GRect(20, 50, 160, 10);
         playerHpFill.setFilled(true);
         playerHpFill.setFillColor(new Color(60, 200, 80));
         playerHpFill.setColor(Color.BLACK);
-        contents.add(playerHpFill);
-        mainScreen.add(playerHpFill);
 
         playerHpLabel = new GLabel("HP");
         playerHpLabel.setFont(new Font("Monospaced", Font.PLAIN, 12));
         playerHpLabel.setColor(Color.WHITE);
         playerHpLabel.setLocation(20, 48);
-        contents.add(playerHpLabel);
-        mainScreen.add(playerHpLabel);
 
-        // Boss HP bar (center top)
+        if (bossModeOnly) {
+            contents.add(playerHpBack);
+            contents.add(playerHpFill);
+            contents.add(playerHpLabel);
+            mainScreen.add(playerHpBack);
+            mainScreen.add(playerHpFill);
+            mainScreen.add(playerHpLabel);
+        }
+
+        // Boss HP (only in boss level)
         bossHpBack = new GRect(w / 2.0 - 180, 10, 360, 8);
         bossHpBack.setFilled(true);
         bossHpBack.setFillColor(new Color(90, 90, 90));
         bossHpBack.setColor(Color.BLACK);
-        contents.add(bossHpBack);
-        mainScreen.add(bossHpBack);
 
         bossHpFill = new GRect(w / 2.0 - 180, 10, 360, 8);
         bossHpFill.setFilled(true);
         bossHpFill.setFillColor(new Color(220, 60, 60));
         bossHpFill.setColor(Color.BLACK);
-        contents.add(bossHpFill);
-        mainScreen.add(bossHpFill);
 
         bossHpLabel = new GLabel("BOSS HP");
         bossHpLabel.setFont(new Font("Monospaced", Font.PLAIN, 12));
         bossHpLabel.setColor(Color.WHITE);
         bossHpLabel.setLocation(w / 2.0 - bossHpLabel.getWidth() / 2.0, 9);
-        contents.add(bossHpLabel);
-        mainScreen.add(bossHpLabel);
+
+        if (bossModeOnly) {
+            contents.add(bossHpBack);
+            contents.add(bossHpFill);
+            contents.add(bossHpLabel);
+            mainScreen.add(bossHpBack);
+            mainScreen.add(bossHpFill);
+            mainScreen.add(bossHpLabel);
+        }
 
         // Board wood
         double boardW = GRID_WIDTH + 80;
@@ -371,7 +392,8 @@ public class GamePane extends GraphicsPane {
         }
         activeRats.removeIf(r -> !r.isActive());
 
-        if (phase == Phase.NORMAL && timeRemainingMs > 0) {
+        // Only spawn rats in level 1 (normal mode)
+        if (!bossModeOnly && phase == Phase.NORMAL && timeRemainingMs > 0) {
             maybeSpawn();
         }
 
@@ -396,7 +418,10 @@ public class GamePane extends GraphicsPane {
 
     private void onTimeExpired() {
         if (phase == Phase.NORMAL) {
-            startBossPhase();
+            // Level 1 finished -> go to dedicated boss screen
+            phase = Phase.FINISHED;
+            if (timer != null) timer.stop();
+            mainScreen.switchToBossScreen();
         } else if (phase == Phase.BOSS) {
             phase = Phase.FINISHED;
             if (!scoreRecorded) {
@@ -443,6 +468,7 @@ public class GamePane extends GraphicsPane {
     }
 
     private void updatePlayerHpBar() {
+        if (playerHpFill == null) return;
         double ratio = playerHp / (double) PLAYER_MAX_HP;
         double fullWidth = 160;
         playerHpFill.setSize(fullWidth * ratio, playerHpFill.getHeight());
@@ -453,6 +479,7 @@ public class GamePane extends GraphicsPane {
     }
 
     private void updateBossHpBar() {
+        if (bossHpFill == null) return;
         double ratio = bossHp / (double) BOSS_MAX_HP;
         double fullWidth = 360;
         bossHpFill.setSize(fullWidth * ratio, bossHpFill.getHeight());
@@ -514,7 +541,17 @@ public class GamePane extends GraphicsPane {
         shadow.sendToFront();
         gameOverLabel.sendToFront();
         if (hammer != null) hammer.sendToFront();
+
+        // NEW: after 2 seconds, go back to main menu
+        new Timer(2000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ((Timer) e.getSource()).stop();
+                mainScreen.switchToWelcomeScreen();
+            }
+        }).start();
     }
+
 
     // --------------------------------------------------------
     // Pause menu
