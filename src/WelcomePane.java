@@ -5,8 +5,6 @@ import java.awt.event.MouseEvent;
 import acm.graphics.GImage;
 import acm.graphics.GLabel;
 import acm.graphics.GObject;
-import acm.graphics.GPolygon;
-import acm.graphics.GRect;
 
 public class WelcomePane extends GraphicsPane {
 
@@ -15,14 +13,15 @@ public class WelcomePane extends GraphicsPane {
     private GImage settingsButtonImg;
     private GImage exitButtonImg;
 
+    private GImage backgroundImg;
+
     public WelcomePane(MainApplication mainScreen) {
         this.mainScreen = mainScreen;
     }
 
     @Override
     public void showContent() {
-        addBackground();
-        addEiffelTowerSilhouette();
+        addBackgroundImage();
         addTitle();
         addButtons();
     }
@@ -35,68 +34,17 @@ public class WelcomePane extends GraphicsPane {
         contents.clear();
     }
 
-    // ---------- Background (French vibe) ----------
-    private void addBackground() {
+    // ---------- Background Image ----------
+    private void addBackgroundImage() {
         double w = mainScreen.getWidth();
         double h = mainScreen.getHeight();
 
-        Color frenchBlue = new Color(58, 91, 170);
-        Color frenchWhite = new Color(245, 245, 245);
-        Color frenchRed = new Color(203, 58, 74);
+        backgroundImg = new GImage("eiffel_tower_background.png");
+        backgroundImg.setSize(w, h);     // Resize to window
+        backgroundImg.setLocation(0, 0);
 
-        GRect sky = new GRect(0, 0, w, h);
-        sky.setFilled(true);
-        sky.setFillColor(new Color(220, 230, 255));
-        sky.setColor(Color.WHITE);
-        contents.add(sky);
-        mainScreen.add(sky);
-
-        GRect leftStrip = new GRect(0, 0, w * 0.20, h);
-        leftStrip.setFilled(true);
-        leftStrip.setFillColor(frenchBlue);
-        leftStrip.setColor(frenchBlue);
-        contents.add(leftStrip);
-        mainScreen.add(leftStrip);
-
-        GRect rightStrip = new GRect(w * 0.80, 0, w * 0.20, h);
-        rightStrip.setFilled(true);
-        rightStrip.setFillColor(frenchRed);
-        rightStrip.setColor(frenchRed);
-        contents.add(rightStrip);
-        mainScreen.add(rightStrip);
-
-        GRect centerPanel = new GRect(w * 0.20, h * 0.12, w * 0.60, h * 0.60);
-        centerPanel.setFilled(true);
-        centerPanel.setFillColor(frenchWhite);
-        centerPanel.setColor(new Color(220, 220, 220));
-        contents.add(centerPanel);
-        mainScreen.add(centerPanel);
-    }
-
-    // ---------- Eiffel Tower ----------
-    private void addEiffelTowerSilhouette() {
-        double w = mainScreen.getWidth();
-        double cx = w / 2.0;
-        double baseY = 330;
-
-        GPolygon tower = new GPolygon();
-        tower.addVertex(cx, baseY - 180);
-        tower.addVertex(cx - 30, baseY - 100);
-        tower.addVertex(cx - 60, baseY);
-        tower.addVertex(cx - 40, baseY);
-        tower.addVertex(cx - 15, baseY - 60);
-        tower.addVertex(cx + 15, baseY - 60);
-        tower.addVertex(cx + 40, baseY);
-        tower.addVertex(cx + 60, baseY);
-        tower.addVertex(cx + 30, baseY - 100);
-        tower.addVertex(cx, baseY - 180);
-
-        tower.setFilled(true);
-        tower.setFillColor(new Color(55, 55, 55));
-        tower.setColor(new Color(30, 30, 30));
-
-        contents.add(tower);
-        mainScreen.add(tower);
+        contents.add(backgroundImg);
+        mainScreen.add(backgroundImg);
     }
 
     // ---------- Title ----------
@@ -106,10 +54,7 @@ public class WelcomePane extends GraphicsPane {
         GLabel title = new GLabel("WRECK IT RATS");
         title.setFont(new Font("Serif", Font.BOLD, 32));
         title.setColor(new Color(40, 40, 40));
-        title.setLocation(
-                (w - title.getWidth()) / 2.0,
-                160
-        );
+        title.setLocation((w - title.getWidth()) / 2.0, 160);
 
         contents.add(title);
         mainScreen.add(title);
