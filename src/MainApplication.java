@@ -39,13 +39,16 @@ public class MainApplication extends GraphicsProgram {
 
     private final List<ScoreEntry> leaderboard = new ArrayList<>();
 
+    // store score before boss level
+    private int preBossScore = 0;
+
     // Screens
     private WelcomePane welcomePane;
     private DescriptionPane descriptionPane;
     private GraphicsPane currentScreen;
     private SettingsPane settingsPane;
-    private GamePane gamePane;       // Level 1 (normal)
-    private GamePane bossPane;       // Level 2 (boss-only)
+    private GamePane gamePane;       // Level 1
+    private GamePane bossPane;       // Boss level
     private LeaderboardPane leaderboardPane;
 
     // Score overlay
@@ -78,7 +81,7 @@ public class MainApplication extends GraphicsProgram {
         descriptionPane = new DescriptionPane(this);
         settingsPane = new SettingsPane(this);
         gamePane = new GamePane(this);          // normal level
-        bossPane = new GamePane(this, true);    // boss level
+        bossPane = new GamePane(this, true);    // boss-only level
         leaderboardPane = new LeaderboardPane(this);
 
         scoreboard = new Scoreboard(this);
@@ -227,6 +230,16 @@ public class MainApplication extends GraphicsProgram {
         if (v < 0) return 0;
         if (v > 100) return 100;
         return v;
+    }
+
+    // ---------- Pre-boss score ----------
+
+    public void setPreBossScore(int score) {
+        this.preBossScore = score;
+    }
+
+    public int getPreBossScore() {
+        return preBossScore;
     }
 
     // ---------- Leaderboard ----------

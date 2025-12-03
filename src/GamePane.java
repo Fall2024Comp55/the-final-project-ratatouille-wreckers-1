@@ -24,8 +24,8 @@ public class GamePane extends GraphicsPane {
     private static final int TICK_MS = 40;
     private static final double SPAWN_CHANCE = 0.05;
     private static final int MAX_ACTIVE_RATS = 5;
-    private static final int GAME_DURATION_MS = 1*60 * 1000;  // 1 minutes (level 1)
-    private static final int BOSS_DURATION_MS = 1* 60 * 1000;      // 1 Minute(boss level)
+    private static final int GAME_DURATION_MS =  25 * 1000;  // 3 minutes (level 1)
+    private static final int BOSS_DURATION_MS = 45 * 1000;      // 45 seconds (boss level)
 
     // HP / boss
     private static final int PLAYER_MAX_HP = 100;
@@ -55,7 +55,7 @@ public class GamePane extends GraphicsPane {
     private GLabel gameOverLabel;
     private GLabel phaseLabel;
 
-    // HP bars
+    // HP bars (only used in boss mode)
     private GRect playerHpBack, playerHpFill;
     private GLabel playerHpLabel;
     private GRect bossHpBack, bossHpFill;
@@ -76,15 +76,18 @@ public class GamePane extends GraphicsPane {
     private GLabel exitLabel;
     private GLabel pauseTitleLabel;
 
-    // NEW: when true this pane is the dedicated boss level
+    // Boss-focus overlay
+    private GRect bossOverlay;
+
+    // When true, this pane is the dedicated boss level
     private final boolean bossModeOnly;
 
-    // Level 1 constructor (normal rats, no boss UI)
+    // Level 1 constructor
     public GamePane(MainApplication mainScreen) {
         this(mainScreen, false);
     }
 
-    // Level 2 constructor (boss-only)
+    // Boss-only constructor
     public GamePane(MainApplication mainScreen, boolean bossModeOnly) {
         this.mainScreen = mainScreen;
         this.bossModeOnly = bossModeOnly;
@@ -93,7 +96,7 @@ public class GamePane extends GraphicsPane {
 
     @Override
     public void showContent() {
-        // clear previous drawings
+        // wipe previous drawings
         for (GObject obj : contents) {
             mainScreen.remove(obj);
         }
@@ -102,10 +105,10 @@ public class GamePane extends GraphicsPane {
         activeRats.clear();
         bossRat = null;
 
-        // draw board + UI
+        // draw board/UI
         buildBoard();
 
-        // reset state
+        // reset game state
         phase = Phase.NORMAL;
         timeRemainingMs = bossModeOnly ? BOSS_DURATION_MS : GAME_DURATION_MS;
         playerHp = PLAYER_MAX_HP;
@@ -175,7 +178,7 @@ public class GamePane extends GraphicsPane {
         contents.add(topBar);
         mainScreen.add(topBar);
 
-        // French flag title
+        // French-flag title bar
         double flagW = 260;
         double flagH = 32;
         double flagX = (w - flagW) / 2.0;
@@ -229,7 +232,7 @@ public class GamePane extends GraphicsPane {
         contents.add(backLabel);
         mainScreen.add(backLabel);
 
-        // Player HP (only in boss level)
+        // Player HP bar (only added in boss mode)
         playerHpBack = new GRect(20, 50, 160, 10);
         playerHpBack.setFilled(true);
         playerHpBack.setFillColor(new Color(80, 80, 80));
@@ -254,7 +257,7 @@ public class GamePane extends GraphicsPane {
             mainScreen.add(playerHpLabel);
         }
 
-        // Boss HP (only in boss level)
+        // Boss HP bar (only added in boss mode)
         bossHpBack = new GRect(w / 2.0 - 180, 10, 360, 8);
         bossHpBack.setFilled(true);
         bossHpBack.setFillColor(new Color(90, 90, 90));
@@ -353,6 +356,16 @@ public class GamePane extends GraphicsPane {
             }
         }
 
+        // Darken background for boss mode
+        if (bossModeOnly) {
+            bossOverlay = new GRect(0, 0, w, h);
+            bossOverlay.setFilled(true);
+            bossOverlay.setFillColor(new Color(0, 0, 0, 90)); // semi-transparent
+            bossOverlay.setColor(new Color(0, 0, 0, 0));
+            contents.add(bossOverlay);
+            mainScreen.add(bossOverlay);
+        }
+
         // Hammer
         GOval hammerShape = new GOval(0, 0, 40, 40);
         hammerShape.setFilled(true);
@@ -392,7 +405,7 @@ public class GamePane extends GraphicsPane {
         }
         activeRats.removeIf(r -> !r.isActive());
 
-        // Only spawn rats in level 1 (normal mode)
+        // Only spawn rats in level 1
         if (!bossModeOnly && phase == Phase.NORMAL && timeRemainingMs > 0) {
             maybeSpawn();
         }
@@ -408,7 +421,9 @@ public class GamePane extends GraphicsPane {
                     phase = Phase.FINISHED;
                     if (!scoreRecorded) {
                         scoreRecorded = true;
-                        mainScreen.recordScore(mainScreen.getScore());
+                        int savedScore = bossModeOnly ? mainScreen.getPreBossScore()
+                                                      : mainScreen.getScore();
+                        mainScreen.recordScore(savedScore);
                     }
                     showGameOverOverlay("YOU WERE WRECKED!");
                 }
@@ -418,15 +433,21 @@ public class GamePane extends GraphicsPane {
 
     private void onTimeExpired() {
         if (phase == Phase.NORMAL) {
-            // Level 1 finished -> go to dedicated boss screen
+            // END OF LEVEL 1 → go to boss screen
             phase = Phase.FINISHED;
             if (timer != null) timer.stop();
+
+            // store score BEFORE boss
+            mainScreen.setPreBossScore(mainScreen.getScore());
+
             mainScreen.switchToBossScreen();
         } else if (phase == Phase.BOSS) {
             phase = Phase.FINISHED;
             if (!scoreRecorded) {
                 scoreRecorded = true;
-                mainScreen.recordScore(mainScreen.getScore());
+                int savedScore = bossModeOnly ? mainScreen.getPreBossScore()
+                                              : mainScreen.getScore();
+                mainScreen.recordScore(savedScore);
             }
             showGameOverOverlay("BOSS ESCAPED!");
         }
@@ -542,7 +563,7 @@ public class GamePane extends GraphicsPane {
         gameOverLabel.sendToFront();
         if (hammer != null) hammer.sendToFront();
 
-        // NEW: after 2 seconds, go back to main menu
+        // Auto-return to main menu after 2 seconds
         new Timer(2000, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -551,7 +572,6 @@ public class GamePane extends GraphicsPane {
             }
         }).start();
     }
-
 
     // --------------------------------------------------------
     // Pause menu
@@ -761,7 +781,9 @@ public class GamePane extends GraphicsPane {
 
                 if (!scoreRecorded) {
                     scoreRecorded = true;
-                    mainScreen.recordScore(mainScreen.getScore());
+                    int savedScore = bossModeOnly ? mainScreen.getPreBossScore()
+                                                  : mainScreen.getScore();
+                    mainScreen.recordScore(savedScore);
                 }
                 showGameOverOverlay("BOSS DEFEATED!");
             }
@@ -792,8 +814,9 @@ public class GamePane extends GraphicsPane {
             }
         }
 
+        // misclick penalty in level 1
         if (!hit && phase == Phase.NORMAL && timeRemainingMs > 0) {
-            mainScreen.addToScore(-1);
+            mainScreen.addToScore(-25);
         }
     }
 }
