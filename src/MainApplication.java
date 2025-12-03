@@ -2,6 +2,16 @@ import acm.graphics.GObject;
 import acm.program.GraphicsProgram;
 
 import javax.swing.JOptionPane;
+
+// --- Imports for custom cursor ---
+import java.awt.Cursor;
+import java.awt.Point;
+import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
+import java.io.File;
+// ---------------------------------
+
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -53,6 +63,9 @@ public class MainApplication extends GraphicsProgram {
     @Override
     public void init() {
         setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
+
+        // --- Apply the custom cursor (hammer) ---
+        setCustomCursor();
     }
 
     @Override
@@ -74,6 +87,29 @@ public class MainApplication extends GraphicsProgram {
 
     public static void main(String[] args) {
         new MainApplication().start();
+    }
+
+    // ---------- Custom Cursor ----------
+    private void setCustomCursor() {
+        try {
+            BufferedImage img = ImageIO.read(new File("Media/hammer.png"));
+
+            // Hotspot positioned on center of hammer's striking face
+            Point hotspot = new Point(18, 28);
+
+            Cursor c = Toolkit.getDefaultToolkit().createCustomCursor(
+                    img,
+                    hotspot,
+                    "HammerCursor"
+            );
+
+            // Set cursor on the ACM canvas (GraphicsProgram doesn't expose setCursor directly)
+            if (getGCanvas() != null) {
+                getGCanvas().setCursor(c);
+            }
+        } catch (Exception e) {
+            System.out.println("Failed to load custom cursor: " + e.getMessage());
+        }
     }
 
     // ---------- Screen switching ----------
