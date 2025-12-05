@@ -1,6 +1,7 @@
 import acm.graphics.*;
 
 import javax.swing.Timer;
+
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
@@ -24,8 +25,8 @@ public class GamePane extends GraphicsPane {
     private static final int TICK_MS = 40;
     private static final double SPAWN_CHANCE = 0.05;
     private static final int MAX_ACTIVE_RATS = 5;
-    private static final int GAME_DURATION_MS =  25 * 1000;  // 3 minutes (level 1)
-    private static final int BOSS_DURATION_MS = 45 * 1000;      // 45 seconds (boss level)
+    private static final int GAME_DURATION_MS = 25 * 1000; // level 1
+    private static final int BOSS_DURATION_MS = 45 * 1000; // boss level
 
     // HP / boss
     private static final int PLAYER_MAX_HP = 100;
@@ -33,6 +34,10 @@ public class GamePane extends GraphicsPane {
     private static final int BOSS_ATTACK_INTERVAL_MS = 1500;
     private static final int BOSS_ATTACK_DAMAGE = 10;
     private static final int BOSS_HIT_DAMAGE = 25;
+
+    // Power-ups
+    private static final int POWERUP_DURATION_MS = 5000;   // 5 seconds active
+    private static final int POWERUP_COOLDOWN_MS = 10000;  // 10 seconds cooldown
 
     private enum Phase { NORMAL, BOSS, FINISHED }
     private Phase phase = Phase.NORMAL;
@@ -50,7 +55,7 @@ public class GamePane extends GraphicsPane {
     private Timer timer;
     private GObject hammer;
     private GRect topBar;
-    private GObject bossBackdrop;   
+    private GObject bossBackdrop;
     private GLabel backLabel;
     private GLabel timerLabel;
     private GLabel gameOverLabel;
@@ -64,6 +69,11 @@ public class GamePane extends GraphicsPane {
 
     private boolean scoreRecorded = false;
     private BossRat bossRat = null;
+
+    // Boss movement
+    private double bossX, bossY;
+    private double bossVX = 0.12;   // pixels per ms
+    private double bossVY = 0.09;   // pixels per ms
 
     // Pause menu
     private boolean paused = false;
@@ -79,6 +89,28 @@ public class GamePane extends GraphicsPane {
 
     // Boss-focus overlay
     private GRect bossOverlay;
+
+    // Power-up buttons + status
+    private GRect freezeButtonRect;
+    private GRect x2PointsButtonRect;
+    private GRect x2CritButtonRect;
+    private GLabel freezeLabel;
+    private GLabel x2PointsLabel;
+    private GLabel x2CritLabel;
+    private GLabel powerupStatusLabel;
+
+    // Power-up state
+    private boolean freezeActive = false;
+    private int freezeRemainingMs = 0;
+    private int freezeCooldownRemainingMs = 0;
+
+    private boolean doublePointsActive = false;
+    private int doublePointsRemainingMs = 0;
+    private int doublePointsCooldownRemainingMs = 0;
+
+    private boolean critActive = false;
+    private int critRemainingMs = 0;
+    private int critCooldownRemainingMs = 0;
 
     // When true, this pane is the dedicated boss level
     private final boolean bossModeOnly;
@@ -122,6 +154,8 @@ public class GamePane extends GraphicsPane {
         updatePlayerHpBar();
         updateBossHpBar();
         mainScreen.setScore(0);
+
+        resetPowerups();  // all power-ups fresh at start
 
         // boss level starts directly in boss phase
         if (bossModeOnly) {
@@ -367,14 +401,88 @@ public class GamePane extends GraphicsPane {
             mainScreen.add(bossOverlay);
         }
 
-        // Hammer
-//        GOval hammerShape = new GOval(0, 0, 40, 40);
-//        hammerShape.setFilled(true);
-//        hammerShape.setFillColor(new Color(230, 70, 70));
-//        hammerShape.setColor(Color.BLACK);
-//        hammer = hammerShape;      
-//        contents.add(hammer);
-//        mainScreen.add(hammer);
+        // --- Power-up buttons along the bottom (higher) ---
+        double btnW = 140;
+        double btnH = 32;
+        double btnGap = 12;
+        double totalBtnW = 3 * btnW + 2 * btnGap;
+        double btnStartX = (w - totalBtnW) / 2.0;
+        double btnY = h - 110;
+
+        Color btnColor = new Color(30, 30, 30);
+
+        // Freeze
+        freezeButtonRect = new GRect(btnStartX, btnY, btnW, btnH);
+        freezeButtonRect.setFilled(true);
+        freezeButtonRect.setFillColor(btnColor);
+        freezeButtonRect.setColor(Color.BLACK);
+        contents.add(freezeButtonRect);
+        mainScreen.add(freezeButtonRect);
+
+        freezeLabel = new GLabel("FREEZE");
+        freezeLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        freezeLabel.setColor(Color.WHITE);
+        freezeLabel.setLocation(
+                btnStartX + (btnW - freezeLabel.getWidth()) / 2.0,
+                btnY + btnH * 0.65
+        );
+        contents.add(freezeLabel);
+        mainScreen.add(freezeLabel);
+
+        // x2 Points
+        double x2X = btnStartX + btnW + btnGap;
+        x2PointsButtonRect = new GRect(x2X, btnY, btnW, btnH);
+        x2PointsButtonRect.setFilled(true);
+        x2PointsButtonRect.setFillColor(btnColor);
+        x2PointsButtonRect.setColor(Color.BLACK);
+        contents.add(x2PointsButtonRect);
+        mainScreen.add(x2PointsButtonRect);
+
+        x2PointsLabel = new GLabel("x2 POINTS");
+        x2PointsLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        x2PointsLabel.setColor(Color.WHITE);
+        x2PointsLabel.setLocation(
+                x2X + (btnW - x2PointsLabel.getWidth()) / 2.0,
+                btnY + btnH * 0.65
+        );
+        contents.add(x2PointsLabel);
+        mainScreen.add(x2PointsLabel);
+
+        // x2 Crit
+        double critX = btnStartX + 2 * (btnW + btnGap);
+        x2CritButtonRect = new GRect(critX, btnY, btnW, btnH);
+        x2CritButtonRect.setFilled(true);
+        x2CritButtonRect.setFillColor(btnColor);
+        x2CritButtonRect.setColor(Color.BLACK);
+        contents.add(x2CritButtonRect);
+        mainScreen.add(x2CritButtonRect);
+
+        x2CritLabel = new GLabel("x2 CRIT");
+        x2CritLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        x2CritLabel.setColor(Color.WHITE);
+        x2CritLabel.setLocation(
+                critX + (btnW - x2CritLabel.getWidth()) / 2.0,
+                btnY + btnH * 0.65
+        );
+        contents.add(x2CritLabel);
+        mainScreen.add(x2CritLabel);
+
+        // Status message on the right
+        powerupStatusLabel = new GLabel("");
+        powerupStatusLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        powerupStatusLabel.setColor(Color.WHITE);
+        powerupStatusLabel.setLocation(w - 260, btnY - 8);
+        contents.add(powerupStatusLabel);
+        mainScreen.add(powerupStatusLabel);
+
+        // Hammer – using custom cursor now, so commented out
+        // GOval hammerShape = new GOval(0, 0, 40, 40);
+        // hammerShape.setFilled(true);
+        // hammerShape.setFillColor(new Color(230, 70, 70));
+        // hammerShape.setColor(Color.BLACK);
+        // hammer = hammerShape;
+        // contents.add(hammer);
+        // mainScreen.add(hammer);
     }
 
     private void setupTimer() {
@@ -392,6 +500,14 @@ public class GamePane extends GraphicsPane {
     private void tick(int deltaMs) {
         if (paused) return;
 
+        // update power-up timers
+        updatePowerups(deltaMs);
+
+        // scaled time for rats / boss (freeze slows these down a lot)
+        double timeScale = freezeActive ? 0.3 : 1.0;
+        int scaledDelta = (int) Math.max(1, Math.round(deltaMs * timeScale));
+
+        // global game timer is NOT slowed by freeze
         if (timeRemainingMs > 0) {
             timeRemainingMs -= deltaMs;
             if (timeRemainingMs <= 0) {
@@ -401,18 +517,21 @@ public class GamePane extends GraphicsPane {
             updateTimerLabel();
         }
 
+        // rat lifetimes
         for (Ratdg r : activeRats) {
-            r.onTick(deltaMs);
+            r.onTick(scaledDelta);
         }
         activeRats.removeIf(r -> !r.isActive());
 
         // Only spawn rats in level 1
+        double spawnScale = freezeActive ? 0.3 : 1.0; // fewer spawns while frozen
         if (!bossModeOnly && phase == Phase.NORMAL && timeRemainingMs > 0) {
-            maybeSpawn();
+            maybeSpawn(spawnScale);
         }
 
+        // boss logic (attacks + movement)
         if (phase == Phase.BOSS && bossRat != null && bossRat.isVisible()) {
-            bossAttackTimerMs += deltaMs;
+            bossAttackTimerMs += scaledDelta;
             if (bossAttackTimerMs >= BOSS_ATTACK_INTERVAL_MS) {
                 bossAttackTimerMs = 0;
                 playerHp -= BOSS_ATTACK_DAMAGE;
@@ -429,17 +548,172 @@ public class GamePane extends GraphicsPane {
                     showGameOverOverlay("YOU WERE WRECKED!");
                 }
             }
+
+            moveBoss(scaledDelta);   // <--- NEW: boss movement
         }
+    }
+
+    // Move boss & bounce inside a central rectangle
+    private void moveBoss(int deltaMs) {
+        if (bossRat == null) return;
+
+        double w = mainScreen.getWidth();
+        double h = mainScreen.getHeight();
+
+        // movement based on velocity (px per ms)
+        bossX += bossVX * deltaMs;
+        bossY += bossVY * deltaMs;
+
+        // bounds for movement (stay inside dark area)
+        double marginX = 120;
+        double marginTop = 130;
+        double marginBottom = 120;
+
+        // bounce horizontally
+        if (bossX < marginX) {
+            bossX = marginX;
+            bossVX = -bossVX;
+        } else if (bossX > w - marginX) {
+            bossX = w - marginX;
+            bossVX = -bossVX;
+        }
+
+        // bounce vertically
+        if (bossY < marginTop) {
+            bossY = marginTop;
+            bossVY = -bossVY;
+        } else if (bossY > h - marginBottom) {
+            bossY = h - marginBottom;
+            bossVY = -bossVY;
+        }
+
+        bossRat.setPosition(bossX, bossY);
+    }
+
+    // power-up timer / cooldown logic
+    private void updatePowerups(int deltaMs) {
+        // Freeze
+        if (freezeActive) {
+            freezeRemainingMs -= deltaMs;
+            if (freezeRemainingMs <= 0) {
+                freezeRemainingMs = 0;
+                freezeActive = false;
+            }
+        }
+        if (freezeCooldownRemainingMs > 0) {
+            freezeCooldownRemainingMs -= deltaMs;
+            if (freezeCooldownRemainingMs <= 0) {
+                freezeCooldownRemainingMs = 0;
+            }
+        }
+
+        // x2 points
+        if (doublePointsActive) {
+            doublePointsRemainingMs -= deltaMs;
+            if (doublePointsRemainingMs <= 0) {
+                doublePointsRemainingMs = 0;
+                doublePointsActive = false;
+            }
+        }
+        if (doublePointsCooldownRemainingMs > 0) {
+            doublePointsCooldownRemainingMs -= deltaMs;
+            if (doublePointsCooldownRemainingMs <= 0) {
+                doublePointsCooldownRemainingMs = 0;
+            }
+        }
+
+        // x2 crit
+        if (critActive) {
+            critRemainingMs -= deltaMs;
+            if (critRemainingMs <= 0) {
+                critRemainingMs = 0;
+                critActive = false;
+            }
+        }
+        if (critCooldownRemainingMs > 0) {
+            critCooldownRemainingMs -= deltaMs;
+            if (critCooldownRemainingMs <= 0) {
+                critCooldownRemainingMs = 0;
+            }
+        }
+
+        updatePowerupButtonVisuals();
+    }
+
+    private void resetPowerups() {
+        freezeActive = false;
+        freezeRemainingMs = 0;
+        freezeCooldownRemainingMs = 0;
+
+        doublePointsActive = false;
+        doublePointsRemainingMs = 0;
+        doublePointsCooldownRemainingMs = 0;
+
+        critActive = false;
+        critRemainingMs = 0;
+        critCooldownRemainingMs = 0;
+
+        if (powerupStatusLabel != null) {
+            powerupStatusLabel.setLabel("");
+        }
+        updatePowerupButtonVisuals();
+    }
+
+    private void updatePowerupButtonVisuals() {
+        Color activeOrCd = new Color(80, 80, 80);
+        Color normal = new Color(30, 30, 30);
+
+        if (freezeButtonRect != null) {
+            freezeButtonRect.setFillColor(
+                    (freezeActive || freezeCooldownRemainingMs > 0) ? activeOrCd : normal
+            );
+        }
+        if (x2PointsButtonRect != null) {
+            x2PointsButtonRect.setFillColor(
+                    (doublePointsActive || doublePointsCooldownRemainingMs > 0) ? activeOrCd : normal
+            );
+        }
+        if (x2CritButtonRect != null) {
+            x2CritButtonRect.setFillColor(
+                    (critActive || critCooldownRemainingMs > 0) ? activeOrCd : normal
+            );
+        }
+    }
+
+    private void showCooldownMessage() {
+        if (powerupStatusLabel == null) return;
+
+        powerupStatusLabel.setLabel("powerup cooling wait 10s");
+
+        Timer t = new Timer(1500, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                powerupStatusLabel.setLabel("");
+                ((Timer) e.getSource()).stop();
+            }
+        });
+        t.setRepeats(false);
+        t.start();
+    }
+
+    // bring power-up UI in front of boss backdrop (for boss level)
+    private void bringPowerupsToFront() {
+        if (freezeButtonRect != null) freezeButtonRect.sendToFront();
+        if (x2PointsButtonRect != null) x2PointsButtonRect.sendToFront();
+        if (x2CritButtonRect != null) x2CritButtonRect.sendToFront();
+        if (freezeLabel != null) freezeLabel.sendToFront();
+        if (x2PointsLabel != null) x2PointsLabel.sendToFront();
+        if (x2CritLabel != null) x2CritLabel.sendToFront();
+        if (powerupStatusLabel != null) powerupStatusLabel.sendToFront();
     }
 
     private void createBossBackdrop() {
         double w = mainScreen.getWidth();
         double h = mainScreen.getHeight();
 
-        // Try to use an image called boss_bg.png if you put one in Media
         try {
             GImage img = new GImage("boss_bg.png");
-            img.setSize(w, h - 60);     // below the top bar
+            img.setSize(w, h - 60); // below the top bar
             img.setLocation(0, 60);
             bossBackdrop = img;
         } catch (Exception ex) {
@@ -485,6 +759,9 @@ public class GamePane extends GraphicsPane {
             bossHpFill.sendToFront();
             bossHpLabel.sendToFront();
         }
+
+        // also power-ups on top
+        bringPowerupsToFront();
     }
 
     private void onTimeExpired() {
@@ -541,11 +818,15 @@ public class GamePane extends GraphicsPane {
         Hole temp = new Hole(centerX, centerY);
         temp.spawn(bossRat);
 
+        // init movement position
+        bossX = centerX;
+        bossY = centerY;
+        // (bossVX, bossVY already set with defaults)
+
         bossHp = BOSS_MAX_HP;
         bossAttackTimerMs = 0;
         updateBossHpBar();
     }
-
 
     private void updateTimerLabel() {
         int totalSeconds = timeRemainingMs / 1000;
@@ -572,14 +853,14 @@ public class GamePane extends GraphicsPane {
         bossHpFill.setSize(fullWidth * ratio, bossHpFill.getHeight());
     }
 
-    private void maybeSpawn() {
+    private void maybeSpawn(double spawnScale) {
         int visible = 0;
         for (Hole h : holes) {
             if (h.isOccupied()) visible++;
         }
         if (visible >= MAX_ACTIVE_RATS) return;
 
-        if (rng.nextDouble() > SPAWN_CHANCE) return;
+        if (rng.nextDouble() > SPAWN_CHANCE * spawnScale) return;
 
         List<Hole> empty = new ArrayList<>();
         for (Hole h : holes) {
@@ -813,11 +1094,61 @@ public class GamePane extends GraphicsPane {
         }
 
         GObject obj = mainScreen.getElementAt(e.getX(), e.getY());
+        if (obj == null) return;
+
+        // Back or top bar
         if (obj == backLabel || obj == topBar) {
             mainScreen.switchToWelcomeScreen();
             return;
         }
+
+        // Power-up buttons first
+        if (obj == freezeButtonRect || obj == freezeLabel) {
+            handleFreezeButton();
+            return;
+        } else if (obj == x2PointsButtonRect || obj == x2PointsLabel) {
+            handleX2PointsButton();
+            return;
+        } else if (obj == x2CritButtonRect || obj == x2CritLabel) {
+            handleX2CritButton();
+            return;
+        }
+
+        // Otherwise, whack rats / boss
         handleWhack(e.getX(), e.getY());
+    }
+
+    private void handleFreezeButton() {
+        if (freezeActive || freezeCooldownRemainingMs > 0) {
+            showCooldownMessage();
+            return;
+        }
+        freezeActive = true;
+        freezeRemainingMs = POWERUP_DURATION_MS;
+        freezeCooldownRemainingMs = POWERUP_COOLDOWN_MS;
+        updatePowerupButtonVisuals();
+    }
+
+    private void handleX2PointsButton() {
+        if (doublePointsActive || doublePointsCooldownRemainingMs > 0) {
+            showCooldownMessage();
+            return;
+        }
+        doublePointsActive = true;
+        doublePointsRemainingMs = POWERUP_DURATION_MS;
+        doublePointsCooldownRemainingMs = POWERUP_COOLDOWN_MS;
+        updatePowerupButtonVisuals();
+    }
+
+    private void handleX2CritButton() {
+        if (critActive || critCooldownRemainingMs > 0) {
+            showCooldownMessage();
+            return;
+        }
+        critActive = true;
+        critRemainingMs = POWERUP_DURATION_MS;
+        critCooldownRemainingMs = POWERUP_COOLDOWN_MS;
+        updatePowerupButtonVisuals();
     }
 
     @Override
@@ -832,10 +1163,14 @@ public class GamePane extends GraphicsPane {
         if (phase == Phase.BOSS && bossRat != null && bossRat.isVisible()
                 && bossRat.containsPoint(x, y)) {
 
-            bossHp -= BOSS_HIT_DAMAGE;
+            int dmg = BOSS_HIT_DAMAGE;
+            if (critActive) dmg *= 2; // x2 crit damage on boss
+
+            bossHp -= dmg;
             if (bossHp < 0) bossHp = 0;
             updateBossHpBar();
-            mainScreen.addToScore(250);
+
+            mainScreen.addToScore(250); // boss hit score
 
             if (bossHp == 0) {
                 bossRat.despawn();
@@ -862,19 +1197,33 @@ public class GamePane extends GraphicsPane {
             if (r == bossRat) continue;
             if (r.isVisible() && r.containsPoint(x, y)) {
                 hit = true;
+
+                int delta = 0;
                 switch (r.getType()) {
                     case NORMAL:
-                        mainScreen.addToScore(50);
+                        delta = 50;
                         break;
                     case BONUS:
-                        mainScreen.addToScore(100);
+                        delta = 100;
                         break;
                     case TRAP:
-                        mainScreen.addToScore(-25);
+                        delta = -25;
                         break;
                     default:
                         break;
                 }
+
+                // apply x2 points logic
+                if (doublePointsActive) {
+                    if (delta > 0) {
+                        delta *= 2;
+                    } else if (delta < 0) {
+                        // trap rat becomes -50 while x2 is on
+                        delta = -50;
+                    }
+                }
+
+                mainScreen.addToScore(delta);
                 r.despawn();
                 break;
             }

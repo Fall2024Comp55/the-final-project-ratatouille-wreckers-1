@@ -1,6 +1,7 @@
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.MouseEvent;
+import java.util.List;
 
 import acm.graphics.GImage;
 import acm.graphics.GLabel;
@@ -64,14 +65,14 @@ public class InfoPane extends GraphicsPane {
                    topY,
                    "Bonus Rat",
                    "+100 points\nRare, super good.",
-                   "rat_bonus.png");   // if missing, it will show a box
+                   "rat_bonus.png");
 
         // Trap
         addRatCard(startX + 2 * (cardW + gap),
                    topY,
                    "Trap Rat",
                    "-25 points\nAvoid hitting this one.",
-                   "rat_trap.png");    // placeholder if missing
+                   "rat_trap.png");
     }
 
     private void addRatCard(double x, double y,
@@ -89,19 +90,14 @@ public class InfoPane extends GraphicsPane {
         mainScreen.add(card);
 
         double imgTopY = y + 18;
-        double imgMaxH = 110;       // max image height inside the card
-
-        boolean hasImage = false;
+        double imgMaxH = 110;
 
         try {
             GImage img = new GImage(imageFile);
-
-            // Scale so it fits under imgMaxH
             double scale = imgMaxH / img.getHeight();
             if (scale < 1.0) {
                 img.scale(scale);
             }
-
             img.setLocation(
                     x + (cardW - img.getWidth()) / 2.0,
                     imgTopY
@@ -109,9 +105,7 @@ public class InfoPane extends GraphicsPane {
 
             contents.add(img);
             mainScreen.add(img);
-            hasImage = true;
         } catch (Exception ex) {
-            // Fallback placeholder
             GRect placeholder = new GRect(
                     x + (cardW - 80) / 2.0,
                     imgTopY + 10,

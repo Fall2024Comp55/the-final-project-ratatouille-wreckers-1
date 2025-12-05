@@ -1,5 +1,6 @@
 import acm.graphics.GObject;
 import acm.program.GraphicsProgram;
+
 import javax.swing.JOptionPane;
 import java.awt.Cursor;
 import java.awt.Point;
@@ -7,16 +8,19 @@ import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import java.io.File;
+
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.FloatControl;
+
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainApplication extends GraphicsProgram {
+
     public static final int WINDOW_WIDTH = 800;
     public static final int WINDOW_HEIGHT = 600;
 
@@ -45,8 +49,8 @@ public class MainApplication extends GraphicsProgram {
     private DescriptionPane descriptionPane;
     private GraphicsPane currentScreen;
     private SettingsPane settingsPane;
-    private GamePane gamePane;       // Level 1
-    private GamePane bossPane;       // Boss level
+    private GamePane gamePane; // Level 1
+    private GamePane bossPane; // Boss level
     private LeaderboardPane leaderboardPane;
     private InfoPane infoPane;
 
@@ -83,7 +87,6 @@ public class MainApplication extends GraphicsProgram {
         bossPane = new GamePane(this, true);    // boss-only level
         leaderboardPane = new LeaderboardPane(this);
         infoPane = new InfoPane(this);
-
 
         scoreboard = new Scoreboard(this);
         scoreboard.update(0);
@@ -176,7 +179,7 @@ public class MainApplication extends GraphicsProgram {
         settingsPane.setReturnToGame(true);
         switchToScreen(settingsPane);
     }
-    
+
     public void switchToInfoScreen() {
         switchToScreen(infoPane);
     }
@@ -261,7 +264,6 @@ public class MainApplication extends GraphicsProgram {
     }
 
     // ---------- Pre-boss score ----------
-
     public void setPreBossScore(int score) {
         this.preBossScore = score;
     }

@@ -1,10 +1,10 @@
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.event.MouseEvent;
-
 import acm.graphics.GImage;
 import acm.graphics.GLabel;
 import acm.graphics.GObject;
+
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.event.MouseEvent;
 
 public class WelcomePane extends GraphicsPane {
 
@@ -12,7 +12,7 @@ public class WelcomePane extends GraphicsPane {
     private GImage leaderboardsButtonImg;
     private GImage settingsButtonImg;
     private GImage exitButtonImg;
-    private GImage infoButtonImg;        // extra button at the bottom
+    private GImage infoButtonImg;
 
     private GImage backgroundImg;
 
@@ -41,7 +41,7 @@ public class WelcomePane extends GraphicsPane {
         double h = mainScreen.getHeight();
 
         backgroundImg = new GImage("eiffel_tower_background.png");
-        backgroundImg.setSize(w, h);     // Resize to window
+        backgroundImg.setSize(w, h);
         backgroundImg.setLocation(0, 0);
 
         contents.add(backgroundImg);
@@ -55,7 +55,6 @@ public class WelcomePane extends GraphicsPane {
         GLabel title = new GLabel("WRECK IT RATS");
         title.setFont(new Font("Serif", Font.BOLD, 32));
         title.setColor(new Color(40, 40, 40));
-        // Slightly higher so stack of buttons fits nicer
         title.setLocation((w - title.getWidth()) / 2.0, 150);
 
         contents.add(title);
@@ -67,9 +66,8 @@ public class WelcomePane extends GraphicsPane {
         double w = mainScreen.getWidth();
         double h = mainScreen.getHeight();
 
-        // Start buttons a bit higher so we can fit INFO at the bottom
-        double startY = h * 0.50;   // around middle of the screen (was 370)
-        double gap    = 52;         // vertical gap between buttons
+        double startY = h * 0.50;
+        double gap    = 52;
 
         // START
         startButtonImg = new GImage("StartButton.png");
@@ -111,9 +109,9 @@ public class WelcomePane extends GraphicsPane {
         contents.add(exitButtonImg);
         mainScreen.add(exitButtonImg);
 
-        // INFO (new) – using more.jpeg, tucked nicely under EXIT
+        // INFO
         infoButtonImg = new GImage("more.jpeg");
-        infoButtonImg.scale(0.22); // slightly smaller so it fits the stack
+        infoButtonImg.scale(0.22);
         infoButtonImg.setLocation(
                 (w - infoButtonImg.getWidth()) / 2.0,
                 startY + 4 * gap

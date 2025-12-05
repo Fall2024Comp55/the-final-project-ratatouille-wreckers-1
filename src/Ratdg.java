@@ -98,4 +98,17 @@ public abstract class Ratdg {
             node.add(fallback, offsetX, offsetY);
         }
     }
+
+    // --- NEW: allow moving / querying rat position (used for boss movement) ---
+    public double getX() {
+        return node.getX();
+    }
+
+    public double getY() {
+        return node.getY();
+    }
+
+    public void setPosition(double x, double y) {
+        node.setLocation(x, y);
+    }
 }
