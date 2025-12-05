@@ -53,6 +53,11 @@ public class MainApplication extends GraphicsProgram {
     private GamePane bossPane; // Boss level
     private LeaderboardPane leaderboardPane;
     private InfoPane infoPane;
+    
+    // Background Music
+    private Clip backgroundMusic;
+    private float musicDecibels = 0f; // stored volume for music
+
 
     // Score overlay
     private Scoreboard scoreboard;
@@ -90,6 +95,8 @@ public class MainApplication extends GraphicsProgram {
 
         scoreboard = new Scoreboard(this);
         scoreboard.update(0);
+        
+        playBackgroundMusic("Media/background_music.wav");
 
         switchToScreen(welcomePane);
     }
@@ -145,6 +152,52 @@ public class MainApplication extends GraphicsProgram {
             System.out.println("ERROR playing sound: " + e.getMessage());
         }
     }
+    
+    // Background Music
+    public void playBackgroundMusic(String filePath) {
+        try {
+            if (backgroundMusic != null && backgroundMusic.isRunning()) {
+                backgroundMusic.stop();
+            }
+
+            File musicFile = new File(filePath);
+            if (!musicFile.exists()) {
+                System.out.println("Music file not found: " + filePath);
+                return;
+            }
+
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(musicFile);
+
+            backgroundMusic = AudioSystem.getClip();
+            backgroundMusic.open(audioStream);
+
+            // Apply saved music volume
+            FloatControl gain = (FloatControl) backgroundMusic.getControl(FloatControl.Type.MASTER_GAIN);
+            float volumeDb = (float)(Math.log10(musicVolume / 100.0) * 20.0);
+            gain.setValue(volumeDb);
+
+            backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY);
+            backgroundMusic.start();
+
+        } catch (Exception e) {
+            System.out.println("ERROR playing background music: " + e.getMessage());
+        }
+    }
+    
+    public void updateMusicVolume() {
+        try {
+            if (backgroundMusic == null) return;
+
+            FloatControl gain = (FloatControl) backgroundMusic.getControl(FloatControl.Type.MASTER_GAIN);
+            float volumeDb = (float)(Math.log10(musicVolume / 100.0) * 20.0);
+            gain.setValue(volumeDb);
+
+        } catch (Exception e) {
+            System.out.println("ERROR adjusting music volume: " + e.getMessage());
+        }
+    }
+
+
 
     // ---------- Screen switching ----------
 
