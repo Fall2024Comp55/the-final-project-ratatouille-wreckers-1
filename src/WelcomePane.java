@@ -110,8 +110,8 @@ public class WelcomePane extends GraphicsPane {
         mainScreen.add(exitButtonImg);
 
         // INFO
-        infoButtonImg = new GImage("more.jpeg");
-        infoButtonImg.scale(0.22);
+        infoButtonImg = new GImage("info_button.png");
+        infoButtonImg.scale(0.085);
         infoButtonImg.setLocation(
                 (w - infoButtonImg.getWidth()) / 2.0,
                 startY + 4 * gap
