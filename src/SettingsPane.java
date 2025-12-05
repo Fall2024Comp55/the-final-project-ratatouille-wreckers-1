@@ -155,14 +155,18 @@ public class SettingsPane extends GraphicsPane {
             mainScreen.setBrightness(brightness.value);
 
             if (returnToGame) {
+            	mainScreen.playSound("Media/hammer_hit.wav");
                 mainScreen.switchToGameScreen();
             } else {
+            	mainScreen.playSound("Media/hammer_hit.wav");
                 mainScreen.switchToWelcomeScreen();
             }
         } else if (obj == cancelButton || obj == cancelLabel || obj == panelBg) {
             if (returnToGame) {
+            	mainScreen.playSound("Media/hammer_hit.wav");
                 mainScreen.switchToGameScreen();
             } else {
+            	mainScreen.playSound("Media/hammer_hit.wav");
                 mainScreen.switchToWelcomeScreen();
             }
         }

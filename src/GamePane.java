@@ -1049,6 +1049,7 @@ public class GamePane extends GraphicsPane {
 
     private void handlePauseClick(double x, double y) {
         if (pausePanel != null && !pausePanel.contains(x, y)) {
+        	mainScreen.playSound("Media/hammer_hit.wav");
             hidePauseMenu();
             return;
         }
@@ -1057,11 +1058,14 @@ public class GamePane extends GraphicsPane {
         if (clicked == null) return;
 
         if (clicked == resumeButtonRect || clicked == resumeLabel) {
+        	mainScreen.playSound("Media/hammer_hit.wav");
             hidePauseMenu();
         } else if (clicked == settingsButtonRect || clicked == settingsLabel) {
+        	mainScreen.playSound("Media/hammer_hit.wav");
             hidePauseMenu();
             mainScreen.switchToSettingsFromGame();
         } else if (clicked == exitButtonRect || clicked == exitLabel) {
+        	mainScreen.playSound("Media/hammer_hit.wav");
             hidePauseMenu();
             mainScreen.switchToWelcomeScreen();
         }
@@ -1089,6 +1093,7 @@ public class GamePane extends GraphicsPane {
     @Override
     public void mouseClicked(MouseEvent e) {
         if (paused) {
+        	mainScreen.playSound("Media/hammer_hit.wav");
             handlePauseClick(e.getX(), e.getY());
             return;
         }
@@ -1098,18 +1103,22 @@ public class GamePane extends GraphicsPane {
 
         // Back or top bar
         if (obj == backLabel || obj == topBar) {
+        	mainScreen.playSound("Media/hammer_hit.wav");
             mainScreen.switchToWelcomeScreen();
             return;
         }
 
         // Power-up buttons first
         if (obj == freezeButtonRect || obj == freezeLabel) {
+        	mainScreen.playSound("Media/hammer_hit.wav");
             handleFreezeButton();
             return;
         } else if (obj == x2PointsButtonRect || obj == x2PointsLabel) {
+        	mainScreen.playSound("Media/hammer_hit.wav");
             handleX2PointsButton();
             return;
         } else if (obj == x2CritButtonRect || obj == x2CritLabel) {
+        	mainScreen.playSound("Media/hammer_hit.wav");
             handleX2CritButton();
             return;
         }
@@ -1162,7 +1171,8 @@ public class GamePane extends GraphicsPane {
         // boss click
         if (phase == Phase.BOSS && bossRat != null && bossRat.isVisible()
                 && bossRat.containsPoint(x, y)) {
-
+        	
+        	mainScreen.playSound("Media/hammer_hit.wav");
             int dmg = BOSS_HIT_DAMAGE;
             if (critActive) dmg *= 2; // x2 crit damage on boss
 
@@ -1196,6 +1206,7 @@ public class GamePane extends GraphicsPane {
         for (Ratdg r : activeRats) {
             if (r == bossRat) continue;
             if (r.isVisible() && r.containsPoint(x, y)) {
+            	mainScreen.playSound("Media/hammer_hit.wav");
                 hit = true;
 
                 int delta = 0;
