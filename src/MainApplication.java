@@ -1,24 +1,16 @@
 import acm.graphics.GObject;
 import acm.program.GraphicsProgram;
-
 import javax.swing.JOptionPane;
-
-// --- Imports for custom cursor ---
 import java.awt.Cursor;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import java.io.File;
-// ---------------------------------
-
-// --- Imports for sound playback ---
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.FloatControl;
-// -----------------------------------
-
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -28,7 +20,6 @@ public class MainApplication extends GraphicsProgram {
     public static final int WINDOW_WIDTH = 800;
     public static final int WINDOW_HEIGHT = 600;
 
-    // Settings (0–100)
     private int mainVolume = 50;
     private int sfxVolume = 50;
     private int musicVolume = 50;
@@ -57,6 +48,7 @@ public class MainApplication extends GraphicsProgram {
     private GamePane gamePane;       // Level 1
     private GamePane bossPane;       // Boss level
     private LeaderboardPane leaderboardPane;
+    private InfoPane infoPane;
 
     // Score overlay
     private Scoreboard scoreboard;
@@ -90,6 +82,8 @@ public class MainApplication extends GraphicsProgram {
         gamePane = new GamePane(this);          // normal level
         bossPane = new GamePane(this, true);    // boss-only level
         leaderboardPane = new LeaderboardPane(this);
+        infoPane = new InfoPane(this);
+
 
         scoreboard = new Scoreboard(this);
         scoreboard.update(0);
@@ -181,6 +175,10 @@ public class MainApplication extends GraphicsProgram {
     public void switchToSettingsFromGame() {
         settingsPane.setReturnToGame(true);
         switchToScreen(settingsPane);
+    }
+    
+    public void switchToInfoScreen() {
+        switchToScreen(infoPane);
     }
 
     protected void switchToScreen(GraphicsPane newScreen) {

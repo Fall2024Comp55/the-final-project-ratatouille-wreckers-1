@@ -12,6 +12,7 @@ public class WelcomePane extends GraphicsPane {
     private GImage leaderboardsButtonImg;
     private GImage settingsButtonImg;
     private GImage exitButtonImg;
+    private GImage infoButtonImg;        // extra button at the bottom
 
     private GImage backgroundImg;
 
@@ -54,7 +55,8 @@ public class WelcomePane extends GraphicsPane {
         GLabel title = new GLabel("WRECK IT RATS");
         title.setFont(new Font("Serif", Font.BOLD, 32));
         title.setColor(new Color(40, 40, 40));
-        title.setLocation((w - title.getWidth()) / 2.0, 160);
+        // Slightly higher so stack of buttons fits nicer
+        title.setLocation((w - title.getWidth()) / 2.0, 150);
 
         contents.add(title);
         mainScreen.add(title);
@@ -63,15 +65,23 @@ public class WelcomePane extends GraphicsPane {
     // ---------- Buttons ----------
     private void addButtons() {
         double w = mainScreen.getWidth();
-        double startY = 370;
-        double gap = 55;
+        double h = mainScreen.getHeight();
 
+        // Start buttons a bit higher so we can fit INFO at the bottom
+        double startY = h * 0.50;   // around middle of the screen (was 370)
+        double gap    = 52;         // vertical gap between buttons
+
+        // START
         startButtonImg = new GImage("StartButton.png");
         startButtonImg.scale(0.15);
-        startButtonImg.setLocation((w - startButtonImg.getWidth()) / 2.0, startY);
+        startButtonImg.setLocation(
+                (w - startButtonImg.getWidth()) / 2.0,
+                startY
+        );
         contents.add(startButtonImg);
         mainScreen.add(startButtonImg);
 
+        // LEADERBOARDS
         leaderboardsButtonImg = new GImage("LeaderboardsButton.png");
         leaderboardsButtonImg.scale(0.10);
         leaderboardsButtonImg.setLocation(
@@ -81,6 +91,7 @@ public class WelcomePane extends GraphicsPane {
         contents.add(leaderboardsButtonImg);
         mainScreen.add(leaderboardsButtonImg);
 
+        // SETTINGS
         settingsButtonImg = new GImage("SettingsButton.png");
         settingsButtonImg.scale(0.10);
         settingsButtonImg.setLocation(
@@ -90,6 +101,7 @@ public class WelcomePane extends GraphicsPane {
         contents.add(settingsButtonImg);
         mainScreen.add(settingsButtonImg);
 
+        // EXIT
         exitButtonImg = new GImage("ExitButton.png");
         exitButtonImg.scale(0.10);
         exitButtonImg.setLocation(
@@ -98,6 +110,16 @@ public class WelcomePane extends GraphicsPane {
         );
         contents.add(exitButtonImg);
         mainScreen.add(exitButtonImg);
+
+        // INFO (new) – using more.jpeg, tucked nicely under EXIT
+        infoButtonImg = new GImage("more.jpeg");
+        infoButtonImg.scale(0.22); // slightly smaller so it fits the stack
+        infoButtonImg.setLocation(
+                (w - infoButtonImg.getWidth()) / 2.0,
+                startY + 4 * gap
+        );
+        contents.add(infoButtonImg);
+        mainScreen.add(infoButtonImg);
     }
 
     @Override
@@ -106,17 +128,20 @@ public class WelcomePane extends GraphicsPane {
         if (clicked == null) return;
 
         if (clicked == startButtonImg) {
-        	mainScreen.playSound("Media/hammer_hit.wav");
+            mainScreen.playSound("Media/hammer_hit.wav");
             mainScreen.switchToGameScreen();
         } else if (clicked == leaderboardsButtonImg) {
-        	mainScreen.playSound("Media/hammer_hit.wav");
+            mainScreen.playSound("Media/hammer_hit.wav");
             mainScreen.switchToLeaderboardScreen();
         } else if (clicked == settingsButtonImg) {
-        	mainScreen.playSound("Media/hammer_hit.wav");
+            mainScreen.playSound("Media/hammer_hit.wav");
             mainScreen.switchToSettingsScreen();
         } else if (clicked == exitButtonImg) {
-        	mainScreen.playSound("Media/hammer_hit.wav");
+            mainScreen.playSound("Media/hammer_hit.wav");
             System.exit(0);
+        } else if (clicked == infoButtonImg) {
+            mainScreen.playSound("Media/hammer_hit.wav");
+            mainScreen.switchToInfoScreen();
         }
     }
 }

@@ -50,6 +50,7 @@ public class GamePane extends GraphicsPane {
     private Timer timer;
     private GObject hammer;
     private GRect topBar;
+    private GObject bossBackdrop;   
     private GLabel backLabel;
     private GLabel timerLabel;
     private GLabel gameOverLabel;
@@ -431,6 +432,61 @@ public class GamePane extends GraphicsPane {
         }
     }
 
+    private void createBossBackdrop() {
+        double w = mainScreen.getWidth();
+        double h = mainScreen.getHeight();
+
+        // Try to use an image called boss_bg.png if you put one in Media
+        try {
+            GImage img = new GImage("boss_bg.png");
+            img.setSize(w, h - 60);     // below the top bar
+            img.setLocation(0, 60);
+            bossBackdrop = img;
+        } catch (Exception ex) {
+            // Fallback: dark "old classroom" style chalkboard
+            GRect dark = new GRect(0, 60, w, h - 60);
+            dark.setFilled(true);
+            dark.setFillColor(new Color(20, 20, 28));
+            dark.setColor(Color.BLACK);
+            bossBackdrop = dark;
+
+            // Wood frame
+            GRect frame = new GRect(80, 90, w - 160, h - 190);
+            frame.setFilled(true);
+            frame.setFillColor(new Color(90, 60, 40));
+            frame.setColor(Color.BLACK);
+            contents.add(frame);
+            mainScreen.add(frame);
+
+            // Green chalkboard inside
+            GRect chalk = new GRect(95, 105, w - 190, h - 220);
+            chalk.setFilled(true);
+            chalk.setFillColor(new Color(20, 60, 40));
+            chalk.setColor(new Color(10, 25, 15));
+            contents.add(chalk);
+            mainScreen.add(chalk);
+        }
+
+        contents.add(bossBackdrop);
+        mainScreen.add(bossBackdrop);
+
+        // Make sure UI stays on top of the dark background
+        if (topBar != null) topBar.sendToFront();
+        if (timerLabel != null) timerLabel.sendToFront();
+        if (backLabel != null) backLabel.sendToFront();
+
+        if (playerHpBack != null) {
+            playerHpBack.sendToFront();
+            playerHpFill.sendToFront();
+            playerHpLabel.sendToFront();
+        }
+        if (bossHpBack != null) {
+            bossHpBack.sendToFront();
+            bossHpFill.sendToFront();
+            bossHpLabel.sendToFront();
+        }
+    }
+
     private void onTimeExpired() {
         if (phase == Phase.NORMAL) {
             // END OF LEVEL 1 → go to boss screen
@@ -458,10 +514,18 @@ public class GamePane extends GraphicsPane {
         timeRemainingMs = BOSS_DURATION_MS;
         updateTimerLabel();
 
-        for (Ratdg r : activeRats) r.despawn();
+        // Clear all normal rats
+        for (Ratdg r : activeRats) {
+            r.despawn();
+        }
         activeRats.clear();
 
+        // Create dark / classroom boss background
+        createBossBackdrop();
+
         double w = mainScreen.getWidth();
+
+        // "BOSS FIGHT" label
         phaseLabel = new GLabel("BOSS FIGHT!");
         phaseLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
         phaseLabel.setColor(new Color(230, 230, 80));
@@ -469,7 +533,8 @@ public class GamePane extends GraphicsPane {
         contents.add(phaseLabel);
         mainScreen.add(phaseLabel);
 
-        double centerX = mainScreen.getWidth() / 2.0;
+        // Spawn boss in the center
+        double centerX = w / 2.0;
         double centerY = 120 + 200;
         bossRat = new BossRat(mainScreen);
         activeRats.add(bossRat);
@@ -480,6 +545,7 @@ public class GamePane extends GraphicsPane {
         bossAttackTimerMs = 0;
         updateBossHpBar();
     }
+
 
     private void updateTimerLabel() {
         int totalSeconds = timeRemainingMs / 1000;
