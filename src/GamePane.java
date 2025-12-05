@@ -712,39 +712,32 @@ public class GamePane extends GraphicsPane {
         double h = mainScreen.getHeight();
 
         try {
-            GImage img = new GImage("boss_bg.png");
+            // Use your boss background image
+            GImage img = new GImage("boss_background.png");
             img.setSize(w, h - 60); // below the top bar
             img.setLocation(0, 60);
             bossBackdrop = img;
         } catch (Exception ex) {
-            // Fallback: dark "old classroom" style chalkboard
+            // Fallback if image not found
             GRect dark = new GRect(0, 60, w, h - 60);
             dark.setFilled(true);
             dark.setFillColor(new Color(20, 20, 28));
             dark.setColor(Color.BLACK);
             bossBackdrop = dark;
 
-            // Wood frame
+            // optional: decorative frame
             GRect frame = new GRect(80, 90, w - 160, h - 190);
             frame.setFilled(true);
             frame.setFillColor(new Color(90, 60, 40));
             frame.setColor(Color.BLACK);
             contents.add(frame);
             mainScreen.add(frame);
-
-            // Green chalkboard inside
-            GRect chalk = new GRect(95, 105, w - 190, h - 220);
-            chalk.setFilled(true);
-            chalk.setFillColor(new Color(20, 60, 40));
-            chalk.setColor(new Color(10, 25, 15));
-            contents.add(chalk);
-            mainScreen.add(chalk);
         }
 
         contents.add(bossBackdrop);
         mainScreen.add(bossBackdrop);
 
-        // Make sure UI stays on top of the dark background
+        // Make sure top UI stays in front
         if (topBar != null) topBar.sendToFront();
         if (timerLabel != null) timerLabel.sendToFront();
         if (backLabel != null) backLabel.sendToFront();
@@ -760,9 +753,9 @@ public class GamePane extends GraphicsPane {
             bossHpLabel.sendToFront();
         }
 
-        // also power-ups on top
         bringPowerupsToFront();
     }
+
 
     private void onTimeExpired() {
         if (phase == Phase.NORMAL) {
