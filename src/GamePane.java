@@ -25,12 +25,12 @@ public class GamePane extends GraphicsPane {
     private static final int TICK_MS = 40;
     private static final double SPAWN_CHANCE = 0.05;
     private static final int MAX_ACTIVE_RATS = 5;
-    private static final int GAME_DURATION_MS = 25 * 1000; // level 1
-    private static final int BOSS_DURATION_MS = 45 * 1000; // boss level
+    private static final int GAME_DURATION_MS = 45 * 1000; // level 1
+    private static final int BOSS_DURATION_MS = 1 * 60 * 1000; // boss level
 
     // HP / boss
     private static final int PLAYER_MAX_HP = 100;
-    private static final int BOSS_MAX_HP = 300;
+    private static final int BOSS_MAX_HP = 500;
     private static final int BOSS_ATTACK_INTERVAL_MS = 1500;
     private static final int BOSS_ATTACK_DAMAGE = 10;
     private static final int BOSS_HIT_DAMAGE = 25;

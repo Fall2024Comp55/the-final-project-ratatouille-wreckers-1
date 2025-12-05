@@ -205,9 +205,7 @@ public class SettingsPane extends GraphicsPane {
             }
             if (activeSlider == musicVol) {
                 mainScreen.setMusicVolume(activeSlider.value);
-                mainScreen.updateMusicVolume();   // <--- add this
             }
-
             if (activeSlider == brightness) {
                 mainScreen.setBrightness(activeSlider.value);
             }
