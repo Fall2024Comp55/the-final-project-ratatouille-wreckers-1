@@ -195,8 +195,23 @@ public class SettingsPane extends GraphicsPane {
             double relative = (newX - min) /
                     (activeSlider.track.getWidth() - activeSlider.handle.getWidth());
             activeSlider.value = (int) (relative * 100);
+
+            // --- Apply volume changes live ---
+            if (activeSlider == sfxVol) {
+                mainScreen.setSfxVolume(activeSlider.value);
+            }
+            if (activeSlider == mainVol) {
+                mainScreen.setMainVolume(activeSlider.value);
+            }
+            if (activeSlider == musicVol) {
+                mainScreen.setMusicVolume(activeSlider.value);
+            }
+            if (activeSlider == brightness) {
+                mainScreen.setBrightness(activeSlider.value);
+            }
         }
     }
+
 
     @Override
     public void mouseReleased(MouseEvent e) {
